@@ -31,7 +31,7 @@
   </properties>
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>xwiki-livetable-excel-export-macro</artifactId>
-  <version>1.7</version>
+  <version>1.8-SNAPSHOT</version>
   <packaging>xar</packaging>
   <name>XWiki Livetable Excel Export Macro</name>
   <description>Add an 'Excel export' button to the Livetable of your choice.</description>
