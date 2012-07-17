@@ -22,10 +22,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.xwiki.platform.applications</groupId>
-    <artifactId>xwiki-applications</artifactId>
-    <version>35</version>
+    <groupId>org.xwiki.commons</groupId>
+    <artifactId>xwiki-commons-pom</artifactId>
+    <version>3.5.1</version>
   </parent>
+  <properties>
+    <xwiki.platform.version>3.5.1</xwiki.platform.version>
+  </properties>
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>xwiki-livetable-excel-export-macro</artifactId>
   <version>1.6-SNAPSHOT</version>
@@ -43,5 +46,21 @@
     <connection>scm:git:git://github.com/xwiki-contrib/macro-livetable-excel-export.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/macro-livetable-excel-export.git</developerConnection>
     <url>https://github.com/xwiki-contrib/macro-livetable-excel-export.git</url>
-  </scm>  
+  </scm>
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.xwiki.commons</groupId>
+        <artifactId>xwiki-commons-tool-xar-handlers</artifactId>
+        <version>${xwiki.platform.version}</version>
+      </extension>
+    </extensions>
+    <plugins>
+      <plugin>
+        <groupId>org.xwiki.commons</groupId>
+        <artifactId>xwiki-commons-tool-xar-plugin</artifactId>
+        <version>${xwiki.platform.version}</version>
+      </plugin>
+    </plugins>
+  </build>
 </project>
