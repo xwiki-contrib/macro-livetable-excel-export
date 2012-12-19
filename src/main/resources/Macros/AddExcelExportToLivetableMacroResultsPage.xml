@@ -11,8 +11,8 @@
 <customClass></customClass>
 <contentAuthor>XWiki.Admin</contentAuthor>
 <creationDate>1341219956000</creationDate>
-<date>1341219956000</date>
-<contentUpdateDate>1341219956000</contentUpdateDate>
+<date>1355920760000</date>
+<contentUpdateDate>1355920760000</contentUpdateDate>
 <version>1.1</version>
 <title>AddExcelExportToLivetableMacroResultsPage</title>
 <template></template>
@@ -171,6 +171,10 @@
     #end
   #end
   ##
+  ## Adding params for the extra clause
+  #set($ok = $tagsMatchingParams.addAll($params))
+  #set($ok = $allMatchingParams.addAll($params))
+  ##
   ## TagCloud matching the current filters
   #set($tagsMatchingFilters = $xwiki.tag.getTagCountForQuery($tagsMatchingFiltersFrom, $tagsMatchingFiltersWhere, $tagsMatchingParams))
   ## TagCloud matching all the documents used by the livetable
@@ -183,10 +187,11 @@
  * This page is called from live grids via Ajax with the argument xpage=plain. It returns a
  * set of results serialized in JSON.
  *#
-#macro(gridresultwithfilterexcel $className $collist $filterfrom $filterwhere)
+#macro(gridresultwithfilterexcel $className $collist $filterfrom $filterwhere $params)
   #gridresultpreparequeries($className $collist $filterfrom $filterwhere)
   ## running the queries
   ##$sql
+  #set($ok = $sqlParams.addAll($params))
   #set($items = $xwiki.searchDocuments($sql, 0, 0, $sqlParams))
   ##$items
   #gridresultexcel($className $collist $filterfrom $filterwhere)
