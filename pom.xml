@@ -35,6 +35,20 @@
   <packaging>xar</packaging>
   <name>XWiki Livetable Excel Export Macro</name>
   <description>Add an 'Excel export' button to the Livetable of your choice.</description>
+  <developers>
+    <developer>
+      <id>gdelhumeau</id>
+      <name>Guillaume Delhumeau</name>
+      <email>guillaume.delhumeau at xwiki.com</email>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>aluca</id>
+      <name>Anca Paula Luca</name>
+      <email>lucaa at xwiki.com</email>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
   <distributionManagement>
     <repository>
       <id>xwiki-staging</id>
