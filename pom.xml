@@ -49,6 +49,13 @@
       <timezone>+1</timezone>
     </developer>
   </developers>
+  <dependencies>
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
+      <artifactId>xwiki-plugin-excel</artifactId>
+      <version>1.0</version>
+    </dependency>
+  </dependencies>
   <distributionManagement>
     <repository>
       <id>xwiki-staging</id>
