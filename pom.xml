@@ -28,6 +28,7 @@
   </parent>
   <properties>
     <xwiki.platform.version>3.5.1</xwiki.platform.version>
+    <xwiki.extension.features>gdelhumeau:livetableexcelexport-macro</xwiki.extension.features>
   </properties>
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>xwiki-livetable-excel-export-macro</artifactId>
