@@ -7,13 +7,13 @@
 <translation>0</translation>
 <parent>Macros.WebHome</parent>
 <creator>XWiki.Admin</creator>
-<author>XWiki.Admin</author>
+<author>xwiki:XWiki.GuillaumeDelhumeau</author>
 <customClass></customClass>
-<contentAuthor>XWiki.Admin</contentAuthor>
+<contentAuthor>xwiki:XWiki.GuillaumeDelhumeau</contentAuthor>
 <creationDate>1341219956000</creationDate>
-<date>1341219956000</date>
-<contentUpdateDate>1341219956000</contentUpdateDate>
-<version>1.1</version>
+<date>1367487513000</date>
+<contentUpdateDate>1367487513000</contentUpdateDate>
+<version>3.1</version>
 <title>AddExcelExportToLivetableMacroResultsPage</title>
 <template></template>
 <defaultTemplate></defaultTemplate>
@@ -230,8 +230,11 @@
       #set($ok = $sheet.setColumnView($colCount, 20))
       #set($colCount = $colCount + 1)
      #elseif($colname == '_action') ,
-     #else     
-      #set($colPrettyName = $class.get($colname).getPrettyName())      
+     #else
+      #set($colPrettyName = $msg.get("${request.transprefix}${colname}"))
+      #if($colPrettyName == "${request.transprefix}${colname}")
+        #set($colPrettyName = $class.get($colname).getPrettyName())
+      #end
       #set($ok = $calc.setLabelCell($sheet, 0, $colCount, $colPrettyName))    
       #set($ok = $sheet.setColumnView($colCount, 20))
       #set($colCount = $colCount + 1)
@@ -271,10 +274,10 @@ $item $rowCount
            #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $itemDoc.getName()))                        
            #set($colCount = $colCount + 1)
          #elseif($colname=='doc.date')
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $xwiki.formatDate($itemDoc.getDate())))
+           #set($ok = $calc.setDateTimeCell($sheet, $rowCount, $colCount, $itemDoc.getDate()))
            #set($colCount = $colCount + 1)
          #elseif($colname=='doc.creationDate')
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $xwiki.formatDate($itemDoc.getCreationDate())))                        
+           #set($ok = $calc.setDateTimeCell($sheet, $rowCount, $colCount, $itemDoc.getCreationDate()))                                   
            #set($colCount = $colCount + 1)
          #elseif($colname=='doc.author')
            #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $itemDoc.author))                        
@@ -314,19 +317,23 @@ $item $rowCount
            #set($fieldDisplayValue = "$!itemDoc.display($colname, 'view')")
            #set($fieldDisplayValue = $fieldDisplayValue.replaceFirst($regextool.quote('{{html clean="false" wiki="false"}}'), '').replaceAll("$regextool.quote('{{/html}}')$", ''))
            ## TODO: maybe we should force the separator for the list properties, to use some comma or something.
-           #if($fieldDisplayValue == '')
-             #if ($msg.get("${request.transprefix}emptyvalue") != "${request.transprefix}emptyvalue")
-               #set($fieldDisplayValue = $msg.get("${request.transprefix}emptyvalue"))
+           #if($propType == 'DateClass' &amp;&amp; $itemDoc.getValue($colname, $obj))
+             #set($ok = $calc.setDateTimeCell($sheet, $rowCount, $colCount, $itemDoc.getValue($colname, $obj)))             
+           #else
+             #if($fieldDisplayValue == '')
+               #if ($msg.get("${request.transprefix}emptyvalue") != "${request.transprefix}emptyvalue")
+                 #set($fieldDisplayValue = $msg.get("${request.transprefix}emptyvalue"))
+               #end
+             #elseif($propType == 'BooleanClass')
+               ## export booleans as 1/0 not as the displayed value, since displayed value can be very formatted and we loose the initial purpose 
+               ## (+ we need to keep it "reimportable")
+               #set($fieldDisplayValue = "$fieldValue")
+             #elseif($propType == 'TextAreaClass')
+              ## reassign fieldDisplayValue to the property rendered in plain/1.0 syntax.
+              #set($fieldDisplayValue = "$!itemDoc.getRenderedContent($fieldValue, $itemDoc.syntax.toIdString(), 'plain/1.0')")
              #end
-           #elseif($propType == 'BooleanClass')
-             ## export booleans as 1/0 not as the displayed value, since displayed value can be very formatted and we loose the initial purpose 
-             ## (+ we need to keep it "reimportable")
-             #set($fieldDisplayValue = "$fieldValue")
-           #elseif($propType == 'TextAreaClass')
-            ## reassign fieldDisplayValue to the property rendered in plain/1.0 syntax.
-            #set($fieldDisplayValue = "$!itemDoc.getRenderedContent($fieldValue, $itemDoc.syntax.toIdString(), 'plain/1.0')")
+             #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $fieldDisplayValue))    
            #end
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $fieldDisplayValue))    
            #set($colCount = $colCount + 1)
            ## reset to the default class
            #set($discard = $itemDoc.use($className))
@@ -394,4 +401,5 @@ $item $rowCount
 This page generates Excel export when called with good arguments (such as outputSyntaxType=excel).
 #end
 
-{{/velocity}}</content></xwikidoc>
+{{/velocity}}
+</content></xwikidoc>
