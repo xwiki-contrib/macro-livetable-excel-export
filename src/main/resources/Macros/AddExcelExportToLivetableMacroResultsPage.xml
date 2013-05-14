@@ -7,13 +7,13 @@
 <translation>0</translation>
 <parent>Macros.WebHome</parent>
 <creator>XWiki.Admin</creator>
-<author>xwiki:XWiki.GuillaumeDelhumeau</author>
+<author>XWiki.Admin</author>
 <customClass></customClass>
-<contentAuthor>xwiki:XWiki.GuillaumeDelhumeau</contentAuthor>
+<contentAuthor>XWiki.Admin</contentAuthor>
 <creationDate>1341219956000</creationDate>
-<date>1367487513000</date>
-<contentUpdateDate>1367487513000</contentUpdateDate>
-<version>3.1</version>
+<date>1368536897000</date>
+<contentUpdateDate>1368536897000</contentUpdateDate>
+<version>2.1</version>
 <title>AddExcelExportToLivetableMacroResultsPage</title>
 <template></template>
 <defaultTemplate></defaultTemplate>
@@ -359,8 +359,18 @@ $item $rowCount
        #set($ok = $response.setHeader("Content-Disposition", 'inline; filename="livetable.xls"'))
        #set($ok = $xcontext.setFinished(true))
        #set($ok = $response.getOutputStream().write($bytes))
-       #set($ok = $response.setHeader("Cache-Control","max-age=120, public"))
-       #set($ok = $response.setHeader("Pragma","-"))
+       ##
+       ##----------------------------------------------------------------------------------------
+       ## Start Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
+       ##----------------------------------------------------------------------------------------
+       ##
+       #set($ok = $response.setHeader("Cache-Control", 'private'))
+       #set($ok = $response.setHeader("Pragma", 'cache'))
+       ##
+       ##----------------------------------------------------------------------------------------
+       ## End Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
+       ##----------------------------------------------------------------------------------------
+       ##
        #set($expires = $util.getDate().getTime())
        #set($expires = $expires+120000)
        #set($expires =$util.getDate($expires))
