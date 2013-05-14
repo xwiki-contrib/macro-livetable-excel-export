@@ -11,9 +11,9 @@
 <customClass></customClass>
 <contentAuthor>XWiki.Admin</contentAuthor>
 <creationDate>1341219956000</creationDate>
-<date>1368536897000</date>
-<contentUpdateDate>1368536897000</contentUpdateDate>
-<version>2.1</version>
+<date>1368540791000</date>
+<contentUpdateDate>1368540791000</contentUpdateDate>
+<version>3.1</version>
 <title>AddExcelExportToLivetableMacroResultsPage</title>
 <template></template>
 <defaultTemplate></defaultTemplate>
@@ -362,6 +362,7 @@ $item $rowCount
        ##
        ##----------------------------------------------------------------------------------------
        ## Start Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
+       ## For more explanations about this approach : http://stackoverflow.com/questions/3415370/ie-unable-to-download-from-unable-to-open-this-internet-site-the-request
        ##----------------------------------------------------------------------------------------
        ##
        #set($ok = $response.setHeader("Cache-Control", 'private'))
