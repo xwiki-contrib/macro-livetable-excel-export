@@ -24,10 +24,10 @@
   <parent>
     <groupId>org.xwiki.commons</groupId>
     <artifactId>xwiki-commons-pom</artifactId>
-    <version>3.5.1</version>
+    <version>4.5.3</version>
   </parent>
   <properties>
-    <xwiki.platform.version>3.5.1</xwiki.platform.version>
+    <xwiki.platform.version>4.5.3</xwiki.platform.version>
     <xwiki.extension.features>gdelhumeau:livetableexcelexport-macro</xwiki.extension.features>
   </properties>
   <groupId>org.xwiki.contrib</groupId>
@@ -55,6 +55,13 @@
       <groupId>org.xwiki.contrib</groupId>
       <artifactId>xwiki-plugin-excel</artifactId>
       <version>1.0</version>
+      <exclusions>
+      <!-- Exclude LOG4J so that we use SLF4J's LOG4J JAR instead to have LOG4J logs go through SLF4J -->
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
   <distributionManagement>
