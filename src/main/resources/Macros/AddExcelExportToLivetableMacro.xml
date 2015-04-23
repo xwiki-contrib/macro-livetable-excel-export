@@ -421,11 +421,13 @@ function addExcelButton(){
   var cells = $('$xcontext.macro.params.livetable').select('[class="xwiki-livetable-pagination"]');
   if(cells.length != 2)
     return;
+  var excel_linebreak = new Element('br');
   var excel_span = new Element('span', {'class':'controlTools'});
   var excel_span_title = new Element('span', {'class': 'xwiki-livetable-tools-text'});
   excel_span_title.update('$msg.get('xwiki.macro.exportexcellivetable.title') ');
   var excel_span_icon = new Element('span', {'class': 'xwiki-livetable-tools-excel', 'title':'$msg.get('xwiki.macro.exportexcellivetable.icontitle')'});
   excel_span_icon.observe('click', function() { livetable.exportToExcel($xcontext.macro.params.withPageName, $xcontext.macro.params.withPageURL, $xcontext.macro.params.withAllFields); });
+  excel_span.appendChild(excel_linebreak);
   excel_span.appendChild(excel_span_title);
   excel_span.appendChild(excel_span_icon);
   cells[1].appendChild(excel_span);
