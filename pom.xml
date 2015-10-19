@@ -32,7 +32,7 @@
   </properties>
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>xwiki-livetable-excel-export-macro</artifactId>
-  <version>1.9-SNAPSHOT</version>
+  <version>1.8.2</version>
   <packaging>xar</packaging>
   <name>XWiki Livetable Excel Export Macro</name>
   <description>Add an 'Excel export' button to the Livetable of your choice.</description>
@@ -75,7 +75,7 @@
     <connection>scm:git:git://github.com/xwiki-contrib/macro-livetable-excel-export.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/macro-livetable-excel-export.git</developerConnection>
     <url>https://github.com/xwiki-contrib/macro-livetable-excel-export.git</url>
-    <tag>HEAD</tag>
+    <tag>xwiki-livetable-excel-export-macro-1.8.2</tag>
   </scm>
   <build>
     <extensions>
