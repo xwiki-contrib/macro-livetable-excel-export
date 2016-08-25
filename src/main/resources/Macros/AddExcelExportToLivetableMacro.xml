@@ -417,7 +417,7 @@ addExportToExcelFunction();</code>
 * Function that add the excel export button to the livetable
 */
 function addExcelButton(){
-  var livetable = window.livetable_$xcontext.macro.params.livetable;
+  var livetable = window["livetable_$xcontext.macro.params.livetable"];
   livetable.exportToExcel = XWiki.widgets.LiveTable.exportToExcel;
   var cells = $('$xcontext.macro.params.livetable').select('[class="xwiki-livetable-pagination"]');
   if(cells.length != 2)
