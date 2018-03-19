@@ -77,6 +77,10 @@
     <url>https://github.com/xwiki-contrib/macro-livetable-excel-export.git</url>
     <tag>HEAD</tag>
   </scm>
+  <issueManagement>
+    <system>jira</system>
+    <url>https://jira.xwiki.org/browse/XALTXLS</url>
+  </issueManagement>
   <build>
     <extensions>
       <extension>
