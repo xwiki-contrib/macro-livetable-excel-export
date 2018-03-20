@@ -24,10 +24,10 @@
   <parent>
     <groupId>org.xwiki.commons</groupId>
     <artifactId>xwiki-commons-pom</artifactId>
-    <version>4.5.3</version>
+    <version>5.4.7</version>
   </parent>
   <properties>
-    <xwiki.platform.version>4.5.3</xwiki.platform.version>
+    <xwiki.platform.version>5.4.7</xwiki.platform.version>
     <xwiki.extension.features>gdelhumeau:livetableexcelexport-macro</xwiki.extension.features>
   </properties>
   <groupId>org.xwiki.contrib</groupId>
@@ -62,6 +62,13 @@
           <artifactId>log4j</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-livetable-ui</artifactId>
+      <version>${xwiki.platform.version}</version>
+      <type>xar</type>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
   <distributionManagement>

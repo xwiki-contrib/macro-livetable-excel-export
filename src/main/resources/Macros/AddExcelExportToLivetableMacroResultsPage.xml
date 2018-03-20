@@ -23,396 +23,171 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{include document="XWiki.LiveTableResultsMacros" /}}
+  <content>{{include reference="XWiki.LiveTableResultsMacros" /}}
+
 {{velocity output="false"}}
 #**
- * Macro to prepare the queries of a livetable data call. Based on XWiki.LiveTableResultsMacros&gt;gridresultwithfilter.
- * If "XWiki.LiveTableResultsMacros&gt;gridresultwithfilter" changes in the future versions of XWiki, check on it if
- * you need to fix this function.
+ * Macro to get the excel results for a livetable. It does the same as the livetable results for the ajax livetable, but it returns the results in excel.
+ * It calls the standard gridresultswithfilter_buildJSON and just serializes it as excel instead of json.
  *#
-#macro(gridresultpreparequeries $className $collist $filterfrom $filterwhere)
-  #set($offset = $util.parseInt($request.get('offset')))
-  ## offset starts from 0 in velocity and 1 in javascript
-  #set($offset = $offset - 1)
-  #if($offset &lt; 0)
-    #set($offset = 0)
-  #end
-  #set($limit = $util.parseInt($request.get('limit')))
-  #set($tablelist = $util.arrayList)
+#macro(gridresultwithfilterexcel $className $collist $filterfrom $filterwhere $filterParams)
+  #if($xcontext.action == 'get' &amp;&amp; "$!{request.outputSyntaxType}" == 'excel')
+    #set($calc = $xwiki.calc)
+    #if ($calc)
+      ## Prepare the excel elements (workbook, sheet)
+      #set($wb = $calc.getWritableWorkbook())
+      #set($sheet = $wb.createSheet("XWiki", 0))
+      #set($colCount = 0)
+      #foreach($colname in $collist)
+        ##DEBUG: generating column $colname on position $colCount
+        #set($ok = $sheet.setColumnView($velocityCount, 15))
+        #if($colname.startsWith('doc.'))
+          #set($colPrettyName = $services.localization.render("$!{request.transprefix}${colname}"))
+          #set($ok = $calc.setLabelCell($sheet, 0, $colCount, $colPrettyName))
+          #set($ok = $sheet.setColumnView($colCount, 20))
+        #elseif($colname == '_action')
+        #else
+          #set($colPrettyName = $services.localization.render("$!{request.transprefix}${colname}"))
+          #if($colPrettyName == "$!{request.transprefix}${colname}")
+            ## col pretty name was not found from translations, try to use the property's pretty name (important for user directory export, for example)
+            #set($propNameTranslationKey = "${className}_${colname}")
+            #set($colPrettyName = $services.localization.render($propNameTranslationKey))
+          #end
+          #set($ok = $calc.setLabelCell($sheet, 0, $colCount, $colPrettyName))
+          #set($ok = $sheet.setColumnView($colCount, 20))
+        #end
+        #set($colCount = $colCount + 1)
+      #end
+      #if("$!{request.withPageName}" == 'true')
+        #set($ok = $calc.setLabelCell($sheet, 0, $colCount, "Reference"))
+        #set($ok = $sheet.setColumnView($colCount, 20))
+        #set($colCount = $colCount + 1)
+      #end
+      #if("$!{request.withPageURL}" == 'true')
+        #set($ok = $calc.setLabelCell($sheet, 0, $colCount, "URL"))
+        #set($ok = $sheet.setColumnView($colCount, 80))
+      #end
+      ## Build the JSON in memory (using basic Java data types) so that it can be adjusted before serialization, using the same functions as the livetable results
+      #set($map = {})
+      #gridresultwithfilter_buildJSON($className $collist $filterfrom $filterwhere $filterParams $map)
+      ## marshall all data from the $map.rows to the excel
+      #set($rowCount = 1)
+      #foreach($curRow in $map.rows)
+        #set($colCount = 0)
+        ## DEBUG: exporting $curRow
+        #foreach($colname in $collist)
+          ## get the value of the column from the current row and put it in the excel
+          #if ($colname.startsWith('doc.'))
+            #set($colVal = "$!curRow.get($colname.replace('doc.', 'doc_'))")
+          #else
+            #set($colVal = "$!curRow.get($colname)")
+            ## hack when the cell contains html, to use the cell_value instead
+            #if ($colVal.indexOf('&lt;') &gt;= 0)
+              #set($colVal_Value = $curRow.get("${colname}_value"))
+              #if("$!colVal_Value" != '')
+                #set($colVal = $colVal_Value)
+              #end
+            #end
+          #end
+          #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $colVal))
+          #set($colCount = $colCount + 1)
+        #end
+        #if("$!{request.withPageName}" == 'true')
+          #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, "$!curRow.get('doc_fullName')"))
+          #set($colCount = $colCount + 1)
+        #end
+        #if("$!{request.withPageURL}" == 'true')
+          #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, "$!curRow.get('doc_url')"))
+          #set($colCount = $colCount + 1)
+        #end
+        #set($rowCount = $rowCount + 1)
+      #end
+      ## ==============================================
+      ## excel ended, now output
+      ## ==============================================
+      #if(!$request.debug)
+        #set($bytes = $calc.getWritableWorkbookAsBytes($wb))
+        #if($bytes)
+          #set($ok = $response.setContentType("application/ms-excel"))
+          ## prepare filename from parameters, if any is passed
+          #set($filename = "livetable.xls")
+          #if ("$!request.excelFilename" != '')
+            #set($filename = "$!{request.excelFilename}.xls")
+          #end
+          #set($contentHeader = 'inline; filename="' + $filename + '"')
+          #set($ok = $response.setHeader("Content-Disposition", $contentHeader))
+          #set($ok = $xcontext.setFinished(true))
+          #set($ok = $response.getOutputStream().write($bytes))
+          ## Start Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
+          ## For more explanations about this approach : http://stackoverflow.com/questions/3415370/ie-unable-to-download-from-unable-to-open-this-internet-site-the-request
+          #set($ok = $response.setHeader("Cache-Control", 'private'))
+          #set($ok = $response.setHeader("Pragma", 'cache'))
+          #set($expires = $util.getDate().getTime())
+          #set($expires = $expires+120000)
+          #set($expires =$util.getDate($expires))
+          #set($ok = $response.setDateHeader("Expires",$expires.getTime()))
+        #else
+          ## TODO need nice translated error message
+          Failed to generate Excel file:
 
-
-  ##
-  ## Compute the query to use for retrieving data
-  ##
-  ## 
-  ## additional columns, should *not* contain parameters, all added column names must be filtered
-  #set($fromSql = '')
-  ## parametrized filter part of the query
-  #set($whereSql = '')
-  ## list of parameters to use with $whereSql
-  #set($whereParams = [])
-  #set($class = $xwiki.getDocument($className).getxWikiClass())
-  ##
-  ## Exclude Blacklisted spaces ($blacklistedSpaces is set in xwikivars.vm)
-  ##
-  #if($blacklistedSpaces.size() &gt; 0)
-    #set($whereSql = "${whereSql} and doc.space not in (")
-    #foreach ($blacklistedSpace in $blacklistedSpaces)
-      #if($velocityCount &gt; 1)#set ($whereSql = "${whereSql},")#end
-      #set($whereSql = "${whereSql}?")
-      #set($discard = $whereParams.add("$!{blacklistedSpace}"))
-    #end
-    #set($whereSql = "${whereSql})")
-  #end
-  ##
-  ## Add the columns needed for the actual data
-  ##
-  #foreach($colname in $collist)
-    #livetable_addColumnToQuery($colname)
-  #end
-  ##
-  ## Tag filtering
-  ##
-  #if($request.tag)
-    #set($fromSql = "${fromSql} , BaseObject as tobject, DBStringListProperty as tagprop")
-    #set($whereSql = "${whereSql} and tobject.className='XWiki.TagClass' and tobject.name=doc.fullName and tobject.id=tagprop.id.id and tagprop.id.name='tags' and (")
-    #foreach($tag in $request.getParameterValues('tag'))
-      #set($tag = $util.decodeURI($tag))
-      #if($velocityCount &gt; 1) #set($whereSql = "${whereSql} and ") #end
-      #set($whereSql = "${whereSql} ? in elements(tagprop.list)")
-      #set($discard = $whereParams.add("${tag}"))
-    #end
-    #set($whereSql = "${whereSql})")
-  #end
-  ##
-  ##
-  ## Order
-  ##
-  #set($order = "$!request.sort")
-  #if($order != '')
-    #set($orderDirection = "$!{request.get('dir').toLowerCase()}")
-    #if("$!orderDirection" != '' &amp;&amp; "$!orderDirection" != 'asc')
-      #set($orderDirection = 'desc')
-    #end
-    #if($order == 'description')
-      #set($tableAlias = 'dtable')
+          $!context.exception
+        #end
+      #else
+        DONE
+      #end
     #else
-      #set($tableAlias = $order)
-    #end
-    ## only safe version should be used in SQL queries
-    #set($safe_tableAlias = "$!{tableAlias.replaceAll('[^a-zA-Z0-9_.]','')}")
-    ##
-    #if($order.startsWith('doc.'))
-      #set($orderSql = " order by ${safe_tableAlias.replace('_','.')} ${orderDirection}")
-    #elseif($tablelist.contains($tableAlias))
-      #set ($multiselect = "$!{class.get($order).getProperty('multiSelect').getValue()}")
-      #if ($multiselect != '1')
-        #set ($orderSql = " order by ${safe_tableAlias}.value ${orderDirection}")
-      #end
-    #elseif($order == 'averagevote')
-      #livetable_getTableName($order)
-      #set($fromSql = "${fromSql}, BaseObject as objratings, ${tableName} ${safe_tableAlias}")
-      #set($whereSql = "${whereSql} and doc.fullName=objratings.name and objratings.className='XWiki.AverageRatingsClass' and objratings.id=${safe_tableAlias}.id.id and ${safe_tableAlias}.name = ?")
-      #set($discard = $whereParams.add("${order}"))
-      #set($orderSql = " order by ${safe_tableAlias}.value ${orderDirection}")
-    #else
-      #set($multiselect = $class.get($order).getProperty('multiSelect').getValue())
-      #if("$multiselect" != '1')
-        #livetable_getTableName($order)
-        #set($fromSql = "${fromSql}, ${tableName} ${safe_tableAlias}")
-        #set($whereSql = "${whereSql} and obj.id=${safe_tableAlias}.id.id and ${safe_tableAlias}.name = ?")
-        #set($discard = $whereParams.add("${order}"))
-        #set($orderSql = " order by ${safe_tableAlias}.value ${orderDirection}")
-      #end
-    #end
-  #end
-  ##
-  ##
-  ## Compute the final queries
-  ##
-  #set($sqlParams = [])
-  #set($tagsMatchingParams = [])
-  #set($allMatchingParams = [])
-  #if("$!className" != '')
-    ## Class query
-    #set($countSql = ", BaseObject as obj $!fromSql $!filterfrom where obj.name=doc.fullName and obj.className = ? and doc.fullName not in (?, ?) $!whereSql $!filterwhere")
-    #set($discard = $sqlParams.addAll(["${className}", "${className}Template", ${className.replaceAll('Class$', 'Template')}]))
-    #set($discard = $sqlParams.addAll($whereParams))
-    ##
-    #set($tagsMatchingFiltersFrom = ", BaseObject as obj $!fromSql $!filterfrom")
-    #set($tagsMatchingFiltersWhere = "obj.name=doc.fullName and obj.className = ? and doc.fullName not in (?, ?) $!whereSql $!filterwhere")
-    #set($discard = $tagsMatchingParams.addAll(["${className}", "${className}Template", ${className.replaceAll('Class$', 'Template')}]))
-    #set($discard = $tagsMatchingParams.addAll($whereParams))
-    ##
-    #set($allMatchingTagsFrom = ", BaseObject as obj $!filterfrom")
-    #set($allMatchingTagsWhere = "obj.name=doc.fullName and obj.className = ? and doc.fullName not in (?, ?) $!filterwhere")
-    #set($discard = $allMatchingParams.addAll(["${className}", "${className}Template", ${className.replaceAll('Class$', 'Template')}]))
-    ##
-    #if($filterParams)
-      #set($discard = $sqlParams.addAll($filterParams))
-      #set($discard = $tagsMatchingParams.addAll($filterParams))
-      #set($discard = $allMatchingParams.addAll($filterParams))
-    #end
-  #else
-    ## Document query
-    #set($countSql = "$!fromSql $!filterfrom where 1=1 $!whereSql $!filterwhere")
-    #set($discard = $sqlParams.addAll($whereParams))
-    ##
-    #set($tagsMatchingFiltersFrom = "$!fromSql $!filterfrom")
-    #set($tagsMatchingFiltersWhere = "1=1 $!whereSql $!filterwhere")
-    #set($discard = $tagsMatchingParams.addAll($whereParams))
-    ##
-    #set($allMatchingTagsFrom = "$!filterfrom")
-    #set($allMatchingTagsWhere = "1=1 $!filterwhere")
-    ##
-    #if($filterParams)
-      #set($discard = $sqlParams.addAll($filterParams))
-      #set($discard = $tagsMatchingParams.addAll($filterParams))
-      #set($discard = $allMatchingParams.addAll($filterParams))
-    #end
-  #end
-  ##
-  ## TagCloud matching the current filters
-  #set($tagsMatchingFilters = $xwiki.tag.getTagCountForQuery($tagsMatchingFiltersFrom, $tagsMatchingFiltersWhere, $tagsMatchingParams))
-  ## TagCloud matching all the documents used by the livetable
-  #set($allMatchingTags = $xwiki.tag.getTagCountForQuery($allMatchingTagsFrom, $allMatchingTagsWhere, $allMatchingParams))
-  #set($sql = "$countSql $!{orderSql}")
-#end
-
-#**
- * Macro to get the results of a livetable data call.
- * This page is called from live grids via Ajax with the argument xpage=plain. It returns a
- * set of results serialized in JSON.
- *#
-#macro(gridresultwithfilterexcel $className $collist $filterfrom $filterwhere)
-  #gridresultpreparequeries($className $collist $filterfrom $filterwhere)
-  ## running the queries
-  ##$sql
-  #set($items = $xwiki.searchDocuments($sql, 0, 0, $sqlParams))
-  ##$items
-  #gridresultexcel($className $collist $filterfrom $filterwhere)
-#end
-
-#*
- * Macro to get the results of a livetable data call in json.
- * This page is called from live grids via Ajax with the argument xpage=plain. It returns a
- * set of results serialized in JSON.
- *#
-#macro(gridresultexcel $className $collist $filterfrom $filterwhere)
-  ## push all fields in the livetable class (if any) in $collist, if the parameter says so
-  #if("$!{request.withAllFields}" == 'true' &amp;&amp; "$!className" != "")
-    ## create a new list, since we cannot add in $collist (UnsupportedOperation): might be because it's coming from a split or so...
-    #set($newCollist = [])
-    #set($discard = $newCollist.addAll($collist))
-    #foreach($col in $collist)
-      #if (!$newCollist.contains($col))
-        #set($discard = $newCollist.add($col))
-      #end
-    #end
-    #set($livetableClass = $xwiki.getDocument($className).getxWikiClass())
-    #foreach($livetableClassPropName in $livetableClass.propertyNames)
-      #if (!$newCollist.contains($livetableClassPropName))
-        #set($discard = $newCollist.add($livetableClassPropName))
-      #end
-    #end
-    #set($collist = $newCollist)
-  #end
-
- #set($calc = $xwiki.calc)
- #set($class = $xwiki.getClass($className)) 
- #if($calc)
-   #set($wb = $calc.getWritableWorkbook())
-   #set($sheet = $wb.createSheet("XWiki", 0))
-   #set($colCount = 0)
-   #foreach($colname in $collist)
-     #set($ok = $sheet.setColumnView($velocityCount, 15))
-     #if($colname.startsWith('doc.'))
-      #set($ok = $calc.setLabelCell($sheet, 0, $colCount, $colname))    
-      #set($ok = $sheet.setColumnView($colCount, 20))
-      #set($colCount = $colCount + 1)
-     #elseif($colname == '_action') ,
-     #else
-      #set($colPrettyName = $msg.get("${request.transprefix}${colname}"))
-      #if($colPrettyName == "${request.transprefix}${colname}")
-        #set($colPrettyName = $class.get($colname).getPrettyName())
-      #end
-      #set($ok = $calc.setLabelCell($sheet, 0, $colCount, $colPrettyName))    
-      #set($ok = $sheet.setColumnView($colCount, 20))
-      #set($colCount = $colCount + 1)
-     #end 
-   #end
-   #if("$!{request.withPageName}" == 'true')
-     #set($ok = $calc.setLabelCell($sheet, 0, $colCount, "page"))    
-     #set($ok = $sheet.setColumnView($colCount, 20))
-     #set($colCount = $colCount + 1)
-   #end
-   #if("$!{request.withPageURL}" == 'true')
-     #set($ok = $calc.setLabelCell($sheet, 0, $colCount, "url"))    
-     #set($ok = $sheet.setColumnView($colCount, 80))
-   #end
-
-   ## ==============================================
-   ## excel starts
-   ## ==============================================
-   #set($rowCount = 1)
-$items
-   #foreach($item in $items)
-$item $rowCount
-     #set($viewable = $xwiki.hasAccessLevel('view', $context.user, "${context.database}:${item}"))
-     #if(!$viewable)
-     #else
-       #set($itemDoc = $xwiki.getDocument($item))
-       #set($fullname = "${itemDoc.wiki}:${itemDoc.space}.${itemDoc.name}")
-       #set($discard = $itemDoc.use($className))
-       #set($obj = $itemDoc.getObject($className))
-       #set($itemUrl = $itemDoc.getExternalURL("view"))  
-       #set($colCount = 0)
-       #foreach($colname in $collist)
-         #if($colname=='doc.title')
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $itemDoc.title))               
-           #set($colCount = $colCount + 1)
-         #elseif($colname=='doc.name')
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $itemDoc.getName()))                        
-           #set($colCount = $colCount + 1)
-         #elseif($colname=='doc.date')
-           #set($ok = $calc.setDateTimeCell($sheet, $rowCount, $colCount, $itemDoc.getDate()))
-           #set($colCount = $colCount + 1)
-         #elseif($colname=='doc.creationDate')
-           #set($ok = $calc.setDateTimeCell($sheet, $rowCount, $colCount, $itemDoc.getCreationDate()))                                   
-           #set($colCount = $colCount + 1)
-         #elseif($colname=='doc.author')
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $itemDoc.author))                        
-           #set($colCount = $colCount + 1)
-         #elseif($colname=='doc.creator')
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $itemDoc.creator))                        
-           #set($colCount = $colCount + 1)
-         #elseif($colname=='doc.version')
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $itemDoc.version))                        
-           #set($colCount = $colCount + 1)
-         #elseif($colname == '_attachments')
-           #livetable_getAttachmentsList($itemDoc)
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $attachlist))    
-           #set($colCount = $colCount + 1)
-         #elseif($colname == '_avatar')
-           #livetable_getAvatar($itemDoc)
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $avatar))    
-           #set($colCount = $colCount + 1)
-         #elseif($colname == '_images')
-           #livetable_getImagesList($itemDoc)
-           #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $imagesList))    
-           #set($colCount = $colCount + 1)
-         #else 
-           #set($propClassName = "$!{request.get(${colname.concat('_class')})}")
-           #if($propClassName != '')
-             #set($propClass = $xwiki.getDocument($propClassName).getxWikiClass())
-             #set($discard = $itemDoc.use($propClassName))
-           #else
-             #set($propClass = $class)
-           #end
-           ## Retrieve the property type as it might be usefull
-           #set($propType = '')
-           #if($listtool.contains($propClass.getPropertyNames(), $colname))
-             #set($propType = "$!{propClass.get($colname).type}")
-           #end
-           #set($fieldValue = "$!itemDoc.getValue($colname)") 
-           #set($fieldDisplayValue = "$!itemDoc.display($colname, 'view')")
-           #set($fieldDisplayValue = $fieldDisplayValue.replaceFirst($regextool.quote('{{html clean="false" wiki="false"}}'), '').replaceAll("$regextool.quote('{{/html}}')$", ''))
-           ## TODO: maybe we should force the separator for the list properties, to use some comma or something.
-           #if($propType == 'DateClass' &amp;&amp; $itemDoc.getValue($colname, $obj))
-             #set($ok = $calc.setDateTimeCell($sheet, $rowCount, $colCount, $itemDoc.getValue($colname, $obj)))             
-           #else
-             #if($fieldDisplayValue == '')
-               #if ($msg.get("${request.transprefix}emptyvalue") != "${request.transprefix}emptyvalue")
-                 #set($fieldDisplayValue = $msg.get("${request.transprefix}emptyvalue"))
-               #end
-             #elseif($propType == 'BooleanClass')
-               ## export booleans as 1/0 not as the displayed value, since displayed value can be very formatted and we loose the initial purpose 
-               ## (+ we need to keep it "reimportable")
-               #set($fieldDisplayValue = "$fieldValue")
-             #elseif($propType == 'TextAreaClass')
-              ## reassign fieldDisplayValue to the property rendered in plain/1.0 syntax.
-              #set($fieldDisplayValue = "$!itemDoc.getRenderedContent($fieldValue, $itemDoc.syntax.toIdString(), 'plain/1.0')")
-             #end
-             #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $fieldDisplayValue))    
-           #end
-           #set($colCount = $colCount + 1)
-           ## reset to the default class
-           #set($discard = $itemDoc.use($className))
-         #end
-       #end ## end foreach column
-       #if("$!{request.withPageName}" == 'true')
-         #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $fullname))    
-         #set($colCount = $colCount + 1)
-       #end
-       #if("$!{request.withPageURL}" == 'true')
-         #set($ok = $calc.setLabelCell($sheet, $rowCount, $colCount, $itemUrl))    
-       #end
-       #set($rowCount = $rowCount + 1)
-     #end ## end viewable
-   #end
-   ## ==============================================
-   ## excel ended, now output
-   ## ==============================================
-   #if(!$request.debug)
-    #set($bytes = $calc.getWritableWorkbookAsBytes($wb))
-     #if($bytes)
-       #set($ok = $response.setContentType("application/ms-excel"))
-       #set($ok = $response.setHeader("Content-Disposition", 'inline; filename="livetable.xls"'))
-       #set($ok = $xcontext.setFinished(true))
-       #set($ok = $response.getOutputStream().write($bytes))
-       ##
-       ##----------------------------------------------------------------------------------------
-       ## Start Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
-       ## For more explanations about this approach : http://stackoverflow.com/questions/3415370/ie-unable-to-download-from-unable-to-open-this-internet-site-the-request
-       ##----------------------------------------------------------------------------------------
-       ##
-       #set($ok = $response.setHeader("Cache-Control", 'private'))
-       #set($ok = $response.setHeader("Pragma", 'cache'))
-       ##
-       ##----------------------------------------------------------------------------------------
-       ## End Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
-       ##----------------------------------------------------------------------------------------
-       ##
-       #set($expires = $util.getDate().getTime())
-       #set($expires = $expires+120000)
-       #set($expires =$util.getDate($expires))
-       #set($ok = $response.setDateHeader("Expires",$expires.getTime()))
-     #else
       ## TODO need nice translated error message
-      Failed to generate Excel file:
-
-      $!context.exception
-     #end
-    #else
-     DONE
+      Excel plugin is not installed
     #end
- #else
-    ## TODO need nice translated error message
-    Excel plugin is not installed
- #end 
+  #end
 #end
 {{/velocity}}
 
 {{velocity wiki="false"}}
+##########################
+## The following code is copied form the standard XWiki.LiveTableResults, with only the replacement of gridresultswithfilter with gridresultswithfilterexcel at the end, if an excel export is asked for.
+## We should try to avoid copying as much as possible, but for safety we need to export.
+##########################
 #set ($extra = '')
 #set ($params = [])
 #if ("$!request.space" != '')
-  #set ($extra = "${extra} and doc.space = ?")
+  #set ($extra = "${extra} AND doc.space = ?")
   #set ($discard = $params.add($request.space))
+#end
+#if ("$!request.location" != '')
+  #set ($extra = "${extra} AND LOWER(doc.fullName) LIKE LOWER(?) ESCAPE '!'")
+  #set ($locationFilterValue = $request.location)
+  ## Note: the "_", "[", and the "%" characters have special meanings in standard SQL servers (they behave as wildcards).
+  ## However, it is not what the user expects (e.g. http://jira.xwiki.org/browse/XWIKI-12608).
+  ## As a consequence, we must escape these characters.
+  ## See http://www.jguru.com/faq/view.jsp?EID=8881 to understand why we use the special clause 'escape' above.
+  ## Since we use '!' for the escaping, we also double existing ones.
+  #set ($locationFilterValue = $locationFilterValue.replaceAll('([\[%_!])', '!$1'))
+  ## Because the user might filter with "/" as separator we replace that by "%", because it could be "."
+  ## (the space separator) or "/" (as it is in the document name).
+  ## In addition, using "%" (any sequence of character) instead of "_" (any single character) gives the ability
+  ## to filter on different levels:
+  ##   e.g. filtering on "Blog/Intro" will return "Blog.BlogIntroduction".
+  ##        On the other hand, it will also returns: "BlogForIntrospection", which might be unexpected.
+  #set ($locationFilterValue = $locationFilterValue.replaceAll('/', '%'))
+  #set ($discard = $params.add("%${locationFilterValue}%"))
 #end
 #if ("$!request.parent" != '')
   #set ($extra = "${extra} and doc.parent = ?")
   #set ($discard = $params.add($request.parent))
 #end
 #if ("$!request.orphaned" == '1')
-  #set ($extra = "${extra} and doc.parent='' and doc.name&lt;&gt;'WebHome'")
+  #set ($homepage = $services.wiki.getById($services.wiki.currentWikiId).mainPageReference)
+  #set ($homepageFullName = $services.model.serialize($homepage, 'local'))
+  ## On Oracle the empty parent is actually null.
+  #set ($extra = "${extra} and (doc.parent = '' or doc.parent is null) and doc.fullName &lt;&gt; ?")
+  #set ($discard = $params.add($homepageFullName))
 #end
-#if("$!{request.outputSyntaxType}" == 'excel')
+#if ($request.outputSyntaxType == 'excel')
   #gridresultwithfilterexcel("$!request.classname" $request.collist.split(',') '' "${extra}" $params)
 #else
-This page generates Excel export when called with good arguments (such as outputSyntaxType=excel).
+  ## This is completely unnnecessary here, we don't need to support the non-excel export, we'll only have excel export call this page, but just for the love of it.
+  #gridresultwithfilter("$!request.classname" $request.collist.split(',') '' "${extra}" $params)
 #end
-
-{{/velocity}}
-</content>
+{{/velocity}}</content>
 </xwikidoc>
