@@ -131,7 +131,7 @@ function addExportToExcelFunction(){
     var urlParameters = this.getUrl.substr(this.getUrl.indexOf('?'));
     var macroDataSourcesDocument = new XWiki.Document('AddExcelExportToLivetableMacroResultsPage', 'Macros');
     // Compute the URL for the excel export action
-    var url = macroDataSourcesDocument.getURL('get') + urlParameters + '&amp;outputSyntaxType=excel&amp;reqNo=' + (++this.sendReqNo);
+    var url = macroDataSourcesDocument.getURL('get') + urlParameters + '&amp;outputSyntaxType=excel&amp;limit=0&amp;reqNo=' + (++this.sendReqNo);
     if(withPageName) {
       url += '&amp;withPageName=true';
     }
