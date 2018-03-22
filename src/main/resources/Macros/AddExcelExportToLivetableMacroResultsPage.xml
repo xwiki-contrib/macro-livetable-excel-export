@@ -54,7 +54,26 @@
   #if($xcontext.action == 'get' &amp;&amp; "$!{request.outputSyntaxType}" == 'excel')
     #set($calc = $xwiki.calc)
     #if ($calc)
-      ## Prepare the excel elements (workbook, sheet)
+      ## get the columns to export. If the all the class properties are asked for, then force add all the properties of the class in the export
+      #if("$!{request.withAllFields}" == 'true')
+        #set($excelLtCollist = [])
+        #foreach($e in $collist)
+          #set($discard = $excelLtCollist.add($e))
+        #end
+        ## DEBUG: $excelLtCollist
+        ## get all the properties from the passed class to add them in the list
+        #foreach($p in $xwiki.getDocument($className).getxWikiClass().properties)
+          #if (!$excelLtCollist.contains($p.name))
+            #set($discard = $excelLtCollist.add($p.name))
+            ## DEBUG: adding additional column $p.name
+          #end
+        #end
+        ## DEBUG: exporting: $excelLtCollist
+        #set($collist = $excelLtCollist.toArray())
+      #end
+      ##
+      ## Prepare the excel elements (workbook, sheet, first line of the sheet with column names)
+      ##
       #set($wb = $calc.getWritableWorkbook())
       #set($sheet = $wb.createSheet("XWiki", 0))
       #set($colCount = 0)
@@ -87,7 +106,9 @@
         #set($ok = $calc.setLabelCell($sheet, 0, $colCount, "URL"))
         #set($ok = $sheet.setColumnView($colCount, 80))
       #end
+      ##
       ## Build the JSON in memory (using basic Java data types) so that it can be adjusted before serialization, using the same functions as the livetable results
+      ##
       #set($map = {})
       #gridresultwithfilter_buildJSON($className $collist $filterfrom $filterwhere $filterParams $map)
       ## marshall all data from the $map.rows to the excel
