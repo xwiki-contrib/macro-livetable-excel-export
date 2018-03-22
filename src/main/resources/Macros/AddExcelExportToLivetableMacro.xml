@@ -450,8 +450,8 @@ function addExcelButton(){
   }
   // add a button with the text and the icon
   var excel_span_title = new Element('span', {'class': 'xwiki-livetable-tools-text'}).update("$services.localization.render('xwiki.macro.exportexcellivetable.title') ");
-  var excel_span_icon = new Element('span', {'class': 'xwiki-livetable-tools-excel', 'title':'$services.localization.render('xwiki.macro.exportexcellivetable.icontitle')'});
-  var excel_button = new Element('button', {'class' : 'button'});
+  var excel_span_icon = new Element('span', {'class': 'xwiki-livetable-tools-excel'});
+  var excel_button = new Element('button', {'class' : 'button', 'title':"$escapetool.javascript($services.localization.render('xwiki.macro.exportexcellivetable.icontitle'))"});
   excel_button.appendChild(excel_span_title);
   excel_button.appendChild(excel_span_icon);
   excel_button.observe('click', function() { livetable.exportToExcel($xcontext.macro.params.withPageName, $xcontext.macro.params.withPageURL, $xcontext.macro.params.withAllFields); });
