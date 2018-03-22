@@ -442,17 +442,22 @@ function addExcelButton(){
   var livetableName = "livetable_$escapetool.javascript($xcontext.macro.params.livetable)";
   var livetable = window[livetableName];
   livetable.exportToExcel = XWiki.widgets.LiveTable.exportToExcel;
-  var cells = $('$xcontext.macro.params.livetable').select('[class="xwiki-livetable-pagination"]');
-  if(cells.length != 2)
+  // add the button after the livetable
+  var livetableElt = $('$escapetool.javascript($xcontext.macro.params.livetable)');
+  if (!livetableElt) {
     return;
-  var excel_span = new Element('span', {'class':'controlTools'});
-  var excel_span_title = new Element('span', {'class': 'xwiki-livetable-tools-text'});
-  excel_span_title.update('$msg.get('xwiki.macro.exportexcellivetable.title') ');
-  var excel_span_icon = new Element('span', {'class': 'xwiki-livetable-tools-excel', 'title':'$msg.get('xwiki.macro.exportexcellivetable.icontitle')'});
-  excel_span_icon.observe('click', function() { livetable.exportToExcel($xcontext.macro.params.withPageName, $xcontext.macro.params.withPageURL, $xcontext.macro.params.withAllFields); });
-  excel_span.appendChild(excel_span_title);
-  excel_span.appendChild(excel_span_icon);
-  cells[1].appendChild(excel_span);
+  }
+  // add a button with the text and the icon
+  var excel_span_title = new Element('span', {'class': 'xwiki-livetable-tools-text'}).update("$services.localization.render('xwiki.macro.exportexcellivetable.title') ");
+  var excel_span_icon = new Element('span', {'class': 'xwiki-livetable-tools-excel', 'title':'$services.localization.render('xwiki.macro.exportexcellivetable.icontitle')'});
+  var excel_button = new Element('button', {'class' : 'button'});
+  excel_button.appendChild(excel_span_title);
+  excel_button.appendChild(excel_span_icon);
+  excel_button.observe('click', function() { livetable.exportToExcel($xcontext.macro.params.withPageName, $xcontext.macro.params.withPageURL, $xcontext.macro.params.withAllFields); });
+  var excel_span = new Element('span', {'class':'buttonwrapper xwiki-livetable-tools-excelexport'});
+  excel_span.appendChild(excel_button);
+  // add the excel span after table
+  livetableElt.insert({'after' : excel_span});
 }
 
 document.observe("xwiki:dom:loaded", addExcelButton);
