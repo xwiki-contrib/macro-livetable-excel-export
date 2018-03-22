@@ -24,7 +24,7 @@
   <web>Macros</web>
   <name>AddExcelExportToLivetableMacroTranslations</name>
   <language/>
-  <defaultLanguage/>
+  <defaultLanguage>en</defaultLanguage>
   <translation>0</translation>
   <parent>Macros.AddExcelExportToLivetableMacro</parent>
   <creator>xwiki:XWiki.Admin</creator>
