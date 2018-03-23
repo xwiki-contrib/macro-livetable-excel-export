@@ -431,7 +431,7 @@ addExportToExcelFunction();</code>
     <guid>73140d2a-791c-4cd8-98fb-918a419346c8</guid>
     <property>
       <code>{{velocity}}
-#if($context.getAction()=='view' || $context.getAction()=='preview')
+#if($xcontext.getAction()=='view' || $xcontext.getAction()=='preview')
 #set($discard = $xwiki.jsx.use("Macros.AddExcelExportToLivetableMacro"))
 #set($discard = $xwiki.ssx.use("Macros.AddExcelExportToLivetableMacro"))
 #set($discard = $services.localization.use('document', 'Macros.AddExcelExportToLivetableMacroTranslations'))
