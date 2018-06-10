@@ -81,7 +81,7 @@
   <scm>
     <connection>scm:git:git://github.com/xwiki-contrib/macro-livetable-excel-export.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/macro-livetable-excel-export.git</developerConnection>
-    <url>https://github.com/xwiki-contrib/macro-livetable-excel-export.git</url>
+    <url>https://github.com/xwiki-contrib/macro-livetable-excel-export/tree/master</url>
     <tag>HEAD</tag>
   </scm>
   <issueManagement>
