@@ -25,6 +25,7 @@
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>parent-platform</artifactId>
     <version>6.2.5</version>
+    <!-- Don't forget to release with mvn org.apache.maven.plugins:maven-release-plugin:2.5:prepare as long as this inherits from 5.4.x because of the bug with git 1.9+ of previous versions of the release plugin -->
   </parent>
   <properties>
     <platform.version>6.0</platform.version>
