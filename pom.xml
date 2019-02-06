@@ -31,10 +31,10 @@
     <xwiki.extension.features>gdelhumeau:livetableexcelexport-macro</xwiki.extension.features>
   </properties>
   <groupId>org.xwiki.contrib</groupId>
-  <artifactId>xwiki-livetable-excel-export-macro</artifactId>
+  <artifactId>xwiki-livetable-export-macros</artifactId>
   <version>3.0-SNAPSHOT</version>
-  <packaging>xar</packaging>
-  <name>XWiki Livetable Export Macro</name>
+  <packaging>pom</packaging>
+  <name>XWiki Livetable Export Macros</name>
   <description>Add an export button to a livetable.</description>
   <developers>
     <developer>
@@ -65,11 +65,6 @@
           <artifactId>log4j</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.opencsv</groupId>
-      <artifactId>opencsv</artifactId>
-      <version>3.10</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
@@ -112,4 +107,8 @@
       </plugin>
     </plugins>
   </build>
+  <modules>
+    <module>macro-livetable-excel-export</module>
+    <module>macro-livetable-exporter</module>
+  </modules>
 </project>
