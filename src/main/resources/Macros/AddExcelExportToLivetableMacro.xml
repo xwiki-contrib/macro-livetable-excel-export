@@ -831,6 +831,10 @@ document.observe("xwiki:dom:loaded", addExcelButton);
   </object>
   <content>= Usage =
 
+{{warning}}
+This macro is deprecated. Please refer to the macro [[Livetable Exporter Macro&gt;&gt;LivetableExporterMacro]] which replaces it.
+{{/warning}}
+
 Just write:
 {{code}}{{addExcelExportToLivetable livetable="my-livetable" /}}{{/code}}
 Where "{{code}}my-livetable{{/code}}" is your livetable's name.
