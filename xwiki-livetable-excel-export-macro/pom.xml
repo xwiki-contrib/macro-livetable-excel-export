@@ -30,7 +30,7 @@
     <artifactId>xwiki-livetable-excel-export-macro</artifactId>
     <version>3.1-SNAPSHOT</version>
     <properties>
-        <xwiki.extension.name>Livetable Excel Exporter Macro</xwiki.extension.name>
+        <xwiki.extension.name>LiveTableExcelExport Macro</xwiki.extension.name>
         <xwiki.extension.category>macro</xwiki.extension.category>
         <xwiki.release.jira.skip>true</xwiki.release.jira.skip>
         <xwiki.issueManagement.system>jira</xwiki.issueManagement.system>
