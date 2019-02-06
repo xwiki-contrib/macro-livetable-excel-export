@@ -27,16 +27,25 @@
         <version>3.0-SNAPSHOT</version>
     </parent>
     <groupId>org.xwiki.contrib</groupId>
-    <artifactId>xwiki-livetable-exporter-macro</artifactId>
+    <artifactId>xwiki-livetable-excel-export-macro</artifactId>
     <version>3.0-SNAPSHOT</version>
+    <properties>
+        <xwiki.extension.name>Livetable Excel Exporter Macro</xwiki.extension.name>
+        <xwiki.extension.category>macro</xwiki.extension.category>
+        <xwiki.release.jira.skip>true</xwiki.release.jira.skip>
+        <xwiki.issueManagement.system>jira</xwiki.issueManagement.system>
+        <xwiki.issueManagement.url>https://jira.xwiki.org/projects/XALTXLS</xwiki.issueManagement.url>
+        <xwiki.extension.features>gdelhumeau:livetableexcelexport-macro</xwiki.extension.features>
+    </properties>
     <packaging>xar</packaging>
-    <name>XWiki Livetable Export Macro</name>
-    <description>Add an export button to a livetable.</description>
+    <name>XWiki Livetable Excel Export Macro</name>
+    <description>Add an Excel export button to a livetable.</description>
     <dependencies>
         <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-            <version>3.10</version>
+            <groupId>org.xwiki.contrib</groupId>
+            <artifactId>xwiki-livetable-exporter-macro</artifactId>
+            <version>3.0-SNAPSHOT</version>
+            <type>xar</type>
         </dependency>
     </dependencies>
 </project>

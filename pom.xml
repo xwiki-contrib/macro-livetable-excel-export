@@ -22,13 +22,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.xwiki.commons</groupId>
-    <artifactId>xwiki-commons-pom</artifactId>
-    <version>6.0</version>
+    <groupId>org.xwiki.contrib</groupId>
+    <artifactId>parent-platform</artifactId>
+    <version>6.2.5</version>
   </parent>
   <properties>
-    <xwiki.platform.version>6.0</xwiki.platform.version>
-    <xwiki.extension.features>gdelhumeau:livetableexcelexport-macro</xwiki.extension.features>
+    <platform.version>6.0</platform.version>
   </properties>
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>xwiki-livetable-export-macros</artifactId>
@@ -53,34 +52,6 @@
       <id>slauriere</id>
     </developer>
   </developers>
-  <dependencies>
-    <dependency>
-      <groupId>org.xwiki.contrib</groupId>
-      <artifactId>xwiki-plugin-excel</artifactId>
-      <version>1.0</version>
-      <exclusions>
-      <!-- Exclude LOG4J so that we use SLF4J's LOG4J JAR instead to have LOG4J logs go through SLF4J -->
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-livetable-ui</artifactId>
-      <version>${xwiki.platform.version}</version>
-      <type>xar</type>
-      <scope>runtime</scope>
-    </dependency>
-  </dependencies>
-  <distributionManagement>
-    <repository>
-      <id>xwiki-staging</id>
-      <name>XWiki Staging Repository</name>
-      <url>http://nexus.xwiki.org/nexus/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
   <scm>
     <connection>scm:git:git://github.com/xwiki-contrib/macro-livetable-excel-export.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/macro-livetable-excel-export.git</developerConnection>
@@ -91,24 +62,8 @@
     <system>jira</system>
     <url>https://jira.xwiki.org/browse/XALTXLS</url>
   </issueManagement>
-  <build>
-    <extensions>
-      <extension>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-tool-xar-handlers</artifactId>
-        <version>${xwiki.platform.version}</version>
-      </extension>
-    </extensions>
-    <plugins>
-      <plugin>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-tool-xar-plugin</artifactId>
-        <version>${xwiki.platform.version}</version>
-      </plugin>
-    </plugins>
-  </build>
   <modules>
-    <module>macro-livetable-excel-export</module>
-    <module>macro-livetable-exporter</module>
+    <module>xwiki-livetable-excel-export-macro</module>
+    <module>xwiki-livetable-exporter-macro</module>
   </modules>
 </project>
