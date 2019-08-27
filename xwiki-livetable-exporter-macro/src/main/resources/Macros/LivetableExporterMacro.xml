@@ -163,13 +163,16 @@ $tableBody
  * Function adding export to file function to the livetable
  */
 function addExportToFileFunction() {
-  XWiki.widgets.LiveTable.exportToFile = function (withPageName, withPageURL, withAllFields, filename, format, resultsPage) {
+  XWiki.widgets.LiveTable.exportToFile = function (withPageName, withPageURL, withAllFields, filename, format, resultsPage, limit) {
     // Get the final part of the data sources URL, after the ?
     var urlParameters = this.getUrl.substr(this.getUrl.indexOf('?'));
     var resultsPageReference = XWiki.Model.resolve(resultsPage, XWiki.EntityType.DOCUMENT);
     var macroDataSourcesDocument = new XWiki.Document(resultsPageReference);
     // Compute the URL for the file export action
-    var url = macroDataSourcesDocument.getURL('get') + urlParameters + '&amp;limit=0&amp;reqNo=' + (++this.sendReqNo);
+    if (isNaN(limit)) {
+      limit = 0;
+    }
+    var url = macroDataSourcesDocument.getURL('get') + urlParameters + '&amp;limit=' + limit + '&amp;reqNo=' + (++this.sendReqNo);
     if(withPageName) {
       url += '&amp;withPageName=true';
     }
@@ -538,7 +541,7 @@ function $functionName(){
     var excelButtonIcon = new Element('span', {'class': 'xwiki-livetable-tools-exporter-excel'});
     exportButton.appendChild(excelButtonIcon);
   #end
-  exportButton.observe('click', function() { livetable.exportToFile($xcontext.macro.params.withPageName, $xcontext.macro.params.withPageURL, $xcontext.macro.params.withAllFields, "$escapetool.javascript("$!xcontext.macro.params.filename")", "$escapetool.javascript($format)", "$escapetool.javascript("$!xcontext.macro.params.customResults")"); });
+  exportButton.observe('click', function() { livetable.exportToFile($xcontext.macro.params.withPageName, $xcontext.macro.params.withPageURL, $xcontext.macro.params.withAllFields, "$escapetool.javascript("$!xcontext.macro.params.filename")", "$escapetool.javascript($format)", "$escapetool.javascript("$!xcontext.macro.params.customResults")", "$xcontext.macro.params.limit"); });
   var exportSpan = new Element('span', {'class':'buttonwrapper xwiki-livetable-tools-exporter'});
   exportSpan.appendChild(exportButton);
   // Add the export span after table
@@ -1107,6 +1110,72 @@ document.observe("xwiki:dom:loaded", $functionName);
     </property>
     <property>
       <name>label</name>
+    </property>
+  </object>
+  <object>
+    <name>Macros.LivetableExporterMacro</name>
+    <number>8</number>
+    <className>XWiki.WikiMacroParameterClass</className>
+    <guid>a275aba3-2ad0-4f37-ae0a-12a2be421a93</guid>
+    <class>
+      <name>XWiki.WikiMacroParameterClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <defaultValue>
+        <disabled>0</disabled>
+        <name>defaultValue</name>
+        <number>4</number>
+        <prettyName>Parameter default value</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </defaultValue>
+      <description>
+        <disabled>0</disabled>
+        <name>description</name>
+        <number>2</number>
+        <prettyName>Parameter description</prettyName>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </description>
+      <mandatory>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>mandatory</name>
+        <number>3</number>
+        <prettyName>Parameter mandatory</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </mandatory>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Parameter name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+    </class>
+    <property>
+      <defaultValue>0</defaultValue>
+    </property>
+    <property>
+      <description>Sets a higer limit to the number of entries that can be exported. This parameter was introduced in particular for avoiding to load the server too much in case of very large exports, which require the macro script to load each page. Leave empty or to "0" for exporting all result entries.</description>
+    </property>
+    <property>
+      <mandatory>0</mandatory>
+    </property>
+    <property>
+      <name>limit</name>
     </property>
   </object>
 </xwikidoc>
