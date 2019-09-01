@@ -42,7 +42,8 @@
   <content>xwiki.macro.livetableExporter.title={0} export
 xwiki.macro.livetableExporter.iconTitle=Export as {0} file
 xwiki.macro.livetableExporter.format.excel=Excel
-xwiki.macro.livetableExporter.format.csv=CSV</content>
+xwiki.macro.livetableExporter.format.csv=CSV
+xwiki.macro.livetableExporter.limit.message=(Limited to {0} first lines)</content>
   <object>
     <name>Macros.LivetableExporterMacroLabels</name>
     <number>0</number>

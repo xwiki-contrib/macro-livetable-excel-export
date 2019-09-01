@@ -534,12 +534,35 @@ function $functionName(){
   #else
     #set ($btnIconTitle = $btnLabel)
   #end
+  ## prepare the limit message, if any.
+  ## check if a message needs to be displayed using the following rule: if the parameter is set, priority to the parameter, true or false. If the param is not set but a limit is set, it defaults to true
+  #set($hasLimitMessage = false)
+  #if ("$!xcontext.macro.params.displayLimitMessage" != '')
+    ## a value is set, set the value
+    #set($hasLimitMessage = true)
+    #if ("$!xcontext.macro.params.displayLimitMessage" == 'true')
+      #set($hasLimitMessage = true)
+    #else
+      #set($hasLimitMessage = false)
+    #end
+  #else
+    #if ("$!xcontext.macro.params.limit" != '' &amp;&amp; "$!numbertool.toNumber($xcontext.macro.params.limit)" != '' &amp;&amp; "$!numbertool.toNumber($xcontext.macro.params.limit)" != '0')
+      #set($hasLimitMessage = true)
+    #end
+  #end
   var exportButtonTitle = new Element('span', {'class': 'xwiki-livetable-tools-text'}).update('$btnLabel');
   var exportButton = new Element('button', {'class' : 'button', 'title':"$escapetool.javascript($btnIconTitle)"});
   exportButton.appendChild(exportButtonTitle);
   #if ($format == 'excel')
     var excelButtonIcon = new Element('span', {'class': 'xwiki-livetable-tools-exporter-excel'});
     exportButton.appendChild(excelButtonIcon);
+  #end
+  #if ($hasLimitMessage)
+    #set ($limitMessageLabel = $services.localization.render('xwiki.macro.livetableExporter.limit.message', $xcontext.macro.params.limit))
+    var limitMessageSpan = new Element('span', {'class':'small'});
+    limitMessageSpan.update("$escapetool.javascript($limitMessageLabel)");
+    exportButton.appendChild(new Element("br"));
+    exportButton.appendChild(limitMessageSpan);
   #end
   exportButton.observe('click', function() { livetable.exportToFile($xcontext.macro.params.withPageName, $xcontext.macro.params.withPageURL, $xcontext.macro.params.withAllFields, "$escapetool.javascript("$!xcontext.macro.params.filename")", "$escapetool.javascript($format)", "$escapetool.javascript("$!xcontext.macro.params.customResults")", "$xcontext.macro.params.limit"); });
   var exportSpan = new Element('span', {'class':'buttonwrapper xwiki-livetable-tools-exporter'});
@@ -1176,6 +1199,72 @@ document.observe("xwiki:dom:loaded", $functionName);
     </property>
     <property>
       <name>limit</name>
+    </property>
+  </object>
+  <object>
+    <name>Macros.LivetableExporterMacro</name>
+    <number>9</number>
+    <className>XWiki.WikiMacroParameterClass</className>
+    <guid>6878fb46-e3e8-4544-8bbc-cae6e5e6c83f</guid>
+    <class>
+      <name>XWiki.WikiMacroParameterClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <defaultValue>
+        <disabled>0</disabled>
+        <name>defaultValue</name>
+        <number>4</number>
+        <prettyName>Parameter default value</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </defaultValue>
+      <description>
+        <disabled>0</disabled>
+        <name>description</name>
+        <number>2</number>
+        <prettyName>Parameter description</prettyName>
+        <rows>5</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </description>
+      <mandatory>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>mandatory</name>
+        <number>3</number>
+        <prettyName>Parameter mandatory</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </mandatory>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Parameter name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+    </class>
+    <property>
+      <defaultValue/>
+    </property>
+    <property>
+      <description>Whether the message mentioning the export limit should be displayed or not. Defaults to "true" if a limit is set.</description>
+    </property>
+    <property>
+      <mandatory>0</mandatory>
+    </property>
+    <property>
+      <name>displayLimitMessage</name>
     </property>
   </object>
 </xwikidoc>

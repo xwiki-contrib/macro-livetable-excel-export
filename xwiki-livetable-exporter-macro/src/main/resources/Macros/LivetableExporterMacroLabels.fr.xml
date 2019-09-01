@@ -42,5 +42,6 @@
   <content>xwiki.macro.livetableExporter.title=Export {0}
 xwiki.macro.livetableExporter.iconTitle=Exporter vers un fichier {0}
 xwiki.macro.livetableExporter.format.excel=Excel
-xwiki.macro.livetableExporter.format.csv=CSV</content>
+xwiki.macro.livetableExporter.format.csv=CSV
+xwiki.macro.livetableExporter.limit.message=(Limité aux {0} premières lignes)</content>
 </xwikidoc>
