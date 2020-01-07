@@ -18,7 +18,6 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-node('java7') {
-  xwikiBuild {
-  }
+xwikiModule {
+  javaTool = 'java7'
 }
