@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
- * See the NOTICE file distributed with this work for additional
- * information regarding copyright ownership.
- *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
--->
-
 <xwikidoc version="1.3" reference="Macros.CsvWriter" locale="">
   <web>Macros</web>
   <name>CsvWriter</name>
@@ -27,12 +7,12 @@
   <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
-  <creationDate>1548861473000</creationDate>
+  <creationDate>1577833200000</creationDate>
   <parent>Main.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
-  <date>1549443298000</date>
-  <contentUpdateDate>1549443298000</contentUpdateDate>
+  <date>1577833200000</date>
+  <contentUpdateDate>1577833200000</contentUpdateDate>
   <version>1.1</version>
   <title>CsvWriter</title>
   <comment/>
@@ -44,6 +24,7 @@ import java.io.StringWriter
 import com.opencsv.CSVWriter
 
 class CsvWriter {
+  def stringWriter = new StringWriter();
 
   def CSVWriter csvWriter
 
@@ -55,8 +36,8 @@ class CsvWriter {
     return "Writer: $csvWriter"
   }
 
-  void initialize(Writer writer) {
-    this.csvWriter = new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)
+  void initialize() {
+    this.csvWriter = new CSVWriter(stringWriter, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)
   }
 
   void writeNext(List list) {
@@ -68,6 +49,10 @@ class CsvWriter {
     if (csvWriter != null) {
       csvWriter.close()
     }
+  }
+
+  String getCSV() {
+    return stringWriter.toString();
   }
 }</content>
 </xwikidoc>
