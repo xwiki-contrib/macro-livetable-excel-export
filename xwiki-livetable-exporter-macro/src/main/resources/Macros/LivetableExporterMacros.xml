@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xwikidoc version="1.3" reference="Macros.LivetableExporterMacros" locale="">
+  <web>Macros</web>
+  <name>LivetableExporterMacros</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <creationDate>1577833200000</creationDate>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <date>1577833200000</date>
+  <contentUpdateDate>1577833200000</contentUpdateDate>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity output="false"}}
+  #set($EXCEL = "excel")
+  #set($CSV = "csv")
+  #set($JSON = "json")
+  
+  #macro(initializeWriter)
+    #if ($format == $EXCEL)
+      #set ($excelWriter = $xwiki.calc)
+      #set ($workbook = $excelWriter.getWritableWorkbook())
+      #set ($sheet = $workbook.createSheet("XWiki", 0))
+    #elseif ($format == $CSV)
+      #set ($csvWriter = $xwiki.parseGroovyFromPage("Macros.CsvWriter"))
+      #set ($discard = $csvWriter.initialize())
+      #set ($rowValues = [])
+    #end
+  #end
+  #macro(setColumnView $columnCount $val)
+    #if ($format == $EXCEL)
+      #set ($discard = $sheet.setColumnView($columnCount, $val))
+    #end
+  #end
+  #macro(setCell $rowCount $columnCount $text)
+    #if ($format == $EXCEL)
+      #set ($discard = $excelWriter.setLabelCell($sheet, $rowCount, $columnCount, $text))
+    #elseif ($format == $CSV)
+      #set ($discard = $rowValues.add($text))
+    #end
+  #end
+  #macro(writeRow)
+    #if ($format == $CSV)
+      #set ($discard = $csvWriter.writeNext($rowValues))
+    #end
+  #end
+  ## Set file name from parameters, if any is passed
+  #macro(setFileName)
+    #if ("$!request.filename" != '')
+      #if ($format == $EXCEL)
+        #set ($filename = "$!{request.filename}.xls")
+      #elseif ($format == $CSV)
+        #set ($filename = "$!{request.filename}.csv")
+      #end
+    #else
+      #if ($format == $EXCEL)
+        #set ($filename = 'data.xls')
+      #elseif ($format == $CSV)
+        #set ($filename = 'data.csv')
+      #end
+    #end
+  #end
+  #macro(setResponseHeaders)
+    #setFileName()
+    #set ($contentHeader = 'inline; filename="' + $filename + '"')
+    #set ($discard = $response.setHeader('Content-Disposition', $contentHeader))
+    ## Start Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
+    ## For more explanations about this approach : http://stackoverflow.com/questions/3415370/ie-unable-to-download-from-unable-to-open-this-internet-site-the-request
+    #set ($discard = $response.setHeader('Cache-Control', 'private'))
+    #set ($discard = $response.setHeader('Pragma', 'cache'))
+    #set ($expires = $util.getDate().getTime())
+    #set ($expires = $expires + 120000)
+    #set ($expires = $util.getDate($expires))
+    #set ($discard = $response.setDateHeader('Expires', $expires.getTime()))
+    #if ($format == $EXCEL)
+      #set ($discard = $response.setContentType('application/ms-excel'))
+    #elseif ($format == $CSV)
+      #set ($discard = $response.setContentType('text/csv'))
+    #elseif ($format == $JSON)
+      #set ($discard = $response.setContentType('application/json'))
+    #end
+  #end
+  ## Get the columns to export. If the all the class properties are asked for, then force add all the properties of the class in the export
+  #macro(setColumnList)
+    #if ("$!{request.withAllFields}" == 'true')
+      #set ($allColumns = [])
+      #foreach ($column in $columnList)
+        #set ($discard = $allColumns.add($column))
+      #end
+      ## DEBUG: $allColumns
+      ## get all the properties from the passed class to add them in the list
+      #foreach ($property in $xwiki.getDocument($className).getxWikiClass().properties)
+        #if (!$allColumns.contains($property.name))
+          #set ($discard = $allColumns.add($property.name))
+          ## DEBUG: adding additional column $property.name
+        #end
+      #end
+      ## DEBUG: exporting: $allColumns
+      #set ($columnList = $allColumns.toArray())
+    #end
+  #end
+  ## Prepare the first line of the sheet with column names
+  #macro(writeFileHeaders)
+    #set ($columnCount = 0)
+    #foreach ($columnName in $columnList)
+      ##DEBUG: generating column $columnName on position $columnCount
+      #setColumnView($velocityCount, 15)
+      #if ($columnName.startsWith('doc.'))
+        #set ($columnPrettyName = $services.localization.render("$!{request.transprefix}${columnName}"))
+        #setCell(0, $columnCount, $columnPrettyName)
+        #setColumnView($columnCount, 20)
+      #elseif ($columnName == '_action')
+      #else
+        #set ($columnPrettyName = $services.localization.render("$!{request.transprefix}${columnName}"))
+        #if ($columnPrettyName == "$!{request.transprefix}${columnName}")
+          ## col pretty name was not found from translations, try to use the property's pretty name (important for user directory export, for example)
+          #set ($propNameTranslationKey = "${className}_${columnName}")
+          #set ($columnPrettyName = $services.localization.render($propNameTranslationKey))
+        #end
+        #setCell(0, $columnCount, $columnPrettyName)
+        #setColumnView($columnCount, 20)
+      #end
+      #set ($columnCount = $columnCount + 1)
+    #end
+    #if ("$!{request.withPageName}" == 'true')
+      #setCell(0, $columnCount, "Reference")
+      #setColumnView($columnCount, 20)
+      #set ($columnCount = $columnCount + 1)
+    #end
+    #if ("$!{request.withPageURL}" == 'true')
+      #setCell(0, $columnCount, "URL")
+      #setColumnView($columnCount, 80)
+    #end
+    #writeRow()
+  #end
+  ## Marshall all data from the $map.rows to the Excel/CSV
+  #macro(writeRows)
+    #set ($rowCount = 1)
+    #foreach ($row in $map.rows)
+      #set ($rowValues = [])
+      #set ($columnCount = 0)
+      ## DEBUG: exporting $row
+      #foreach ($columnName in $columnList)
+        ## get the value of the column from the current row and put it in the excel
+        #if ($columnName.startsWith('doc.'))
+          #set ($columnValue = "$!row.get($columnName.replace('doc.', 'doc_'))")
+        #else
+          #set ($columnValue = "$!row.get($columnName)")
+          ## hack when the cell contains html, to use the cell_value instead
+          #if ($columnValue.indexOf('&lt;') &gt;= 0)
+            #set ($columnValueValue = $row.get("${columnName}_value"))
+            #if ("$!columnValueValue" != '')
+              #set ($columnValue = $columnValueValue)
+            #end
+          #end
+        #end
+        #setCell($rowCount, $columnCount, $columnValue)
+        #set ($columnCount = $columnCount + 1)
+      #end
+      #if ("$!{request.withPageName}" == 'true')
+        #setCell($rowCount, $columnCount, "$!row.get('doc_fullName')")
+        #set ($columnCount = $columnCount + 1)
+      #end
+      #if ("$!{request.withPageURL}" == 'true')
+        #setCell($rowCount, $columnCount, "$!row.get('doc_url')")
+        #set ($columnCount = $columnCount + 1)
+      #end
+      #set ($rowCount = $rowCount + 1)
+      #writeRow()
+    #end
+  #end
+
+
+#**
+ * This macro exports the data from a livetable to an Excel or CSV file. It does the same as the livetable Ajax call, but it returns the results in the requested format.
+ * It calls the standard macro 'gridresultswithfilter_buildJSON' and serializes the result in XLS/CSV instead of JSON.
+ *#
+#macro(gridresultwithfilterexport $className $columnList $filterFrom $filterWhere $filterParams $format $async $fileName)
+  #if ($xcontext.action == 'get')
+    #if ($format == $CSV || $format == $EXCEL || $format == $JSON)
+      ## Initialize response headers at the beginning, because in the case of CSV we want to stream the output into the response.
+      #if(!$async)
+       #setResponseHeaders()
+      #end
+      #initializeWriter()
+      #setColumnList()
+      #writeFileHeaders()
+      ## Build the JSON in memory (using basic Java data types) so that it can be adjusted before serialization, using the same functions as the livetable results
+      #set ($map = {})
+      #gridresultwithfilter_buildJSON($className $columnList $filterFrom $filterWhere $filterParams $map)
+      #writeRows()
+      ## Data generation ended, now output.
+      #if (!$request.debug)
+        #if ($format == $EXCEL)
+          #set ($bytes = $excelWriter.getWritableWorkbookAsBytes($workbook))
+        #elseif ($format == $CSV)
+          #set ($bytes = $csvWriter.getCSV().getBytes())
+        #elseif ($format == $JSON)
+          #set ($json = $jsontool.serialize($map))
+          #set ($bytes = $json.getBytes())
+        #end
+        #if($async)
+          #set($ok = $log.warn($services.localization.render("xwiki.macro.livetableExporter.async.saving", [$fileName, $bytes.size()])))
+          #set($exporterG = $xwiki.parseGroovyFromPage("Macros.LivetableExporterGroovy"))
+          #set($ok = $exporterG.writeFile($bytes, $fileName, $services))
+        #else
+         #set ($discard = $response.getOutputStream().write($bytes))
+         #set ($discard = $xcontext.setFinished(true))
+        #end
+        #if ($format == $CSV)
+          #set ($discard = $csvWriter.close())
+        #end
+      #else
+        Done
+      #end
+    #end
+  #end
+#end
+
+#**
+ * Customization of this livetable API to add progress when exporting in async mode
+ * Adds information about each live table row to the JSON returned by a live table data call.
+ * NOTE: This macro uses Velocity variables defined by gridresultwithfilter_buildQuery.
+ *
+ * @param $map stores the JSON in memory so that it can be adjusted before serialization
+ *#
+#macro(gridresult_buildRowsJSON $map)
+  #set($offset = $mathtool.toInteger($request.get('offset')))
+  ## Offset starts from 0 in velocity and 1 in javascript
+  #set($offset = $offset - 1)
+  #if(!$offset || $offset &lt; 0)
+    #set($offset = 0)
+  #end
+  #set($limit = $mathtool.toInteger($request.get('limit')))
+  #if(!$limit)
+    #set ($limit = 15)
+  #end
+  #set($query = $services.query.hql($sql))
+  ## Apply query filters if defined. Otherwise use default.
+  #foreach ($queryFilter in $stringtool.split($!request.queryFilters, ', '))
+    #set ($query = $query.addFilter($queryFilter))
+  #end
+  #set ($query = $query.setLimit($limit).setOffset($offset).bindValues($sqlParams))
+  ## CUSTOMIZATION Log launch of query
+  #set($ok = $log.warn($services.localization.render("xwiki.macro.livetableExporter.async.runningquery")))
+  #set($items = $query.execute())
+  ## CUSTOMIZATION Log result of query
+  #set($ok = $log.warn($services.localization.render("xwiki.macro.livetableExporter.async.exportinglines", [$items.size()])))
+  #set($nbItems = $items.size())
+  #set($discard = $map.put('totalrows', $query.count()))
+  #set($discard = $map.put('returnedrows', $mathtool.min($items.size(), $limit)))
+  #set($discard = $map.put('offset', $mathtool.add($offset, 1)))
+  #set($rows = [])
+  ## CUSTOMIZATION Prepare steps for progress
+  #set($itemsPerStep = $nbItems / 99.0)
+  #if($itemsPerStep == 0)
+   #set($itemsPerStep = 1)
+  #end
+  #set($ok = $log.debug("Items per step: ${itemsPerStep}"))
+  #set($lastStep = 1)
+  #set($ok = $services.progress.popLevel())
+  #set($ok = $services.progress.startStep())
+  ## CUSTOMIZATION End Prepare steps for progress
+  #foreach($item in $items)
+    ## CUSTOMIZATION steps for progress
+    #set($currentStep = $velocityCount / $itemsPerStep)
+    #set($ok = $log.debug("Status: ${currentStep} ${lastStep}"))
+    #if($currentStep&gt;$lastStep)
+      #foreach($steps in [$lastStep..$currentStep])
+       #set($ok = $services.progress.endStep())
+       #set($ok = $services.progress.startStep())
+      #end
+      #set($lastStep = $mathtool.ceil($currentStep))
+      #set($ok = $log.warn($services.localization.render("xwiki.macro.livetableExporter.async.exporting", [$velocityCount, $items.size()])))
+    #end
+    ## CUSTOMIZATION end steps for progress
+    #gridresult_buildRowJSON($item $rows)
+  #end
+  ## CUSTOMIZATION Final step for progress
+  #set($ok = $services.progress.endStep())
+  #set($discard = $map.put('rows', $rows))
+#end
+{{velocity}}</content>
+</xwikidoc>
