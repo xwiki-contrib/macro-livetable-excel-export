@@ -4,7 +4,7 @@
   <web>Macros</web>
   <name>LivetableExporterMacroAsync</name>
   <language/>
-  <defaultLanguage>fr</defaultLanguage>
+  <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
   <creationDate>1577833200000</creationDate>
@@ -17,7 +17,7 @@
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
-  <hidden>false</hidden>
+  <hidden>true</hidden>
   <content>{{velocity output="false"}}
 ## We are generating a jobId but it should not include the request number otherwise it will be a different ID all the time. The objective is to get the same jobId for the same livetable request parameters
 #set ($hashCode = $request.getQueryString().replaceAll("filename=.*?&amp;","").replaceAll("reqNo=[0-9]+?&amp;","").hashCode())
