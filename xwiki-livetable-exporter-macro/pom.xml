@@ -58,6 +58,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>org.xwiki.contrib</groupId>
+            <artifactId>macro-job</artifactId>
+            <version>1.4.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.xwiki.platform</groupId>
             <artifactId>xwiki-platform-livetable-ui</artifactId>
             <version>${platform.version}</version>
