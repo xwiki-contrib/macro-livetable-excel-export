@@ -44,19 +44,30 @@ import org.apache.commons.io.FileUtils;
 
 public class WriteFileGroovy {
 
-  public getFile(name, services) {
+  public getFile(name, services, xcontext) {
     def dirName = services.component.getInstance(Environment.class).getTemporaryDirectory();
-    File dir = new File(dirName, "livetableexport")
+    // contextualize the paths used by this service to the current user, or guest otherwise
+    String username = "XWiki.XWikiGuest";
+    def currentUserRef = xcontext.getUserReference();
+    if (currentUserRef != null) {
+      username = services.model.serialize(currentUserRef, 'default');
+    }
+    // hash the user reference in the path, to avoid any problems with the special characters in the user reference
+    File dir = new File(dirName, "livetableexport/" + username.hashCode());
     if (!dir.exists()) {
-      dir.mkdir();
+      dir.mkdirs();
     }
 
     return new File(dir, name);
   }
 
-  public writeFile(bytes, name, services) {
-    // FIXME: should this also be available only to users with programming rights, in order to prevent whoever from writing files in the temp folder?
-    def file = getFile(name, services);
+  public writeFile(bytes, name, services, xcontext) {
+    // check rights of the caller script author to execute this operation, if it's not a programming script, don't allow access to files
+    if (!xcontext.hasProgrammingRights()) {
+      services.logging.getLogger(this.getClass().getName()).warn("An attempt to access function writeFile was done with a user without hasProgrammingRights");
+      return;
+    }
+    def file = getFile(name, services, xcontext);
     try {
       FileUtils.writeByteArrayToFile(file, bytes)
     } catch (e) {
@@ -75,7 +86,7 @@ public class WriteFileGroovy {
     // if the right is there, proceed with fetching the file and downloading it
     try {
       def response = xcontext.response
-      def file = getFile(name, services);
+      def file = getFile(name, services, xcontext);
       if (!file.exists()) {
         return services.localization.render('xwiki.macro.livetableExporter.async.filemissing', [name]);
       }

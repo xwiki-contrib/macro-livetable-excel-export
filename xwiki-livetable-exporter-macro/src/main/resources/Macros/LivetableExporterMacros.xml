@@ -230,7 +230,7 @@
         #if($async)
           #set($ok = $log.warn($services.localization.render("xwiki.macro.livetableExporter.async.saving", [$fileName, $bytes.size()])))
           #set($exporterG = $xwiki.parseGroovyFromPage("Macros.LivetableExporterGroovy"))
-          #set($ok = $exporterG.writeFile($bytes, $fileName, $services))
+          #set($ok = $exporterG.writeFile($bytes, $fileName, $services, $xcontext))
         #else
          #set ($discard = $response.getOutputStream().write($bytes))
          #set ($discard = $xcontext.setFinished(true))
