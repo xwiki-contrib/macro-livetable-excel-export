@@ -39,58 +39,58 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>
-import org.xwiki.environment.Environment;
+  <content>import org.xwiki.environment.Environment;
 import org.apache.commons.io.FileUtils;
 
 public class WriteFileGroovy {
 
- public getFile(name, services) {
-   def dirName = services.component.getInstance(Environment.class).getTemporaryDirectory();
-   File dir = new File(dirName, "livetableexport")
-   if (!dir.exists())
-     dir.mkdir();
+  public getFile(name, services) {
+    def dirName = services.component.getInstance(Environment.class).getTemporaryDirectory();
+    File dir = new File(dirName, "livetableexport")
+    if (!dir.exists()) {
+      dir.mkdir();
+    }
 
-   return new File(dir, name);
- }
-
- public writeFile(bytes, name, services) {
-   def file = getFile(name, services);
-   try {
-     FileUtils.writeByteArrayToFile(file, bytes)
-   } catch (e) {
-     e.printStackTrace();
-     return -1;
-   }
-   return 0;
- }
-
-
- public downloadFile(name, services, fileName, xcontext) {
-  try {
-   def response = xcontext.response
-   def file = getFile(name, services);
-   if (!file.exists())
-     return services.localization.render('xwiki.macro.livetableExporter.async.filemissing', [name]);
-   def bytes = FileUtils.readFileToByteArray(file);
-   response.setContentType("application/ms-excel")
-   if (fileName==null)
-     filename = "livetable.xls"
-   def contentHeader = 'inline; filename="' + fileName + '"'
-   response.setHeader("Content-Disposition", contentHeader)
-   response.setHeader("Cache-Control", 'private')
-   response.setHeader("Pragma", 'cache')
-   def expires = (new Date()).getTime()
-   expires = expires+120000
-   response.setDateHeader("Expires", expires)
-   response.getOutputStream().write(bytes)
-   xcontext.setFinished(true)
-  } catch (e) {
-    e.printStackTrace();
-    return e.getMessage();
+    return new File(dir, name);
   }
- }
 
+  public writeFile(bytes, name, services) {
+    def file = getFile(name, services);
+    try {
+      FileUtils.writeByteArrayToFile(file, bytes)
+    } catch (e) {
+      e.printStackTrace();
+      return -1;
+    }
+    return 0;
+  }
+
+  public downloadFile(name, services, fileName, xcontext) {
+    try {
+      def response = xcontext.response
+      def file = getFile(name, services);
+      if (!file.exists()) {
+        return services.localization.render('xwiki.macro.livetableExporter.async.filemissing', [name]);
+      }
+      def bytes = FileUtils.readFileToByteArray(file);
+      response.setContentType("application/ms-excel")
+      if (fileName == null) {
+        filename = "livetable.xls"
+      }
+      def contentHeader = 'inline; filename="' + fileName + '"'
+      response.setHeader("Content-Disposition", contentHeader)
+      response.setHeader("Cache-Control", 'private')
+      response.setHeader("Pragma", 'cache')
+      def expires = (new Date()).getTime()
+      expires = expires+120000
+      response.setDateHeader("Expires", expires)
+      response.getOutputStream().write(bytes)
+      xcontext.setFinished(true)
+    } catch (e) {
+      e.printStackTrace();
+      return e.getMessage();
+    }
+  }
 }
 </content>
 </xwikidoc>
