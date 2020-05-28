@@ -64,17 +64,12 @@
 {{velocity output="false"}}
   #set ($log = $services.logging.getLogger($doc.fullName))
   #try()
+    #prepareGridResultsParamsFromRequest()
     #set($extension = "xls")
     #if($request.outputSyntaxType=="csv")
       #set($extension = "csv")
     #elseif($request.outputSyntaxType=="json")
       #set($extension = "json")
-    #end
-    #set ($extra = '')
-    #set ($params = [])
-    #if ("$!request.space" != '')
-      #set ($extra = "${extra} and doc.space = ?")
-      #set ($discard = $params.add($request.space))
     #end
     #set ($fileName = "${jobId[1]}.${extension}")
     #gridresultwithfilterexport("$!request.classname" $request.collist.split(',') '' "${extra}" $params $request.outputSyntaxType true $fileName)
