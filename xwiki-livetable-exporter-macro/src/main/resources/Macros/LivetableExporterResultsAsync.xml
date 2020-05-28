@@ -42,19 +42,19 @@
   <content>{{velocity output="false"}}
 ## We are generating a jobId but it should not include the request number otherwise it will be a different ID all the time. The objective is to get the same jobId for the same livetable request parameters
 #set ($hashCode = $request.getQueryString().replaceAll("filename=.*?&amp;","").replaceAll("reqNo=[0-9]+?&amp;","").hashCode())
-#if($hashCode&lt;0)
- #set($hashCode = 0 - $hashCode)
+#if ($hashCode&lt;0)
+ #set ($hashCode = 0 - $hashCode)
 #end
 #set ($jobId = "livetableexport/$hashCode")
 {{/velocity}}
 
 {{job id="{{velocity}}$!jobId{{/velocity}}" start="true"}}
 {{velocity output="false"}}
- ## This is important to know exactly how many steps we have
- $services.progress.pushLevel(100)
- ## This allows to consider all steps performed by the XWiki core as the first step of the total 100 steps
- $services.progress.pushLevel(1)
- #set($discard = $services.localization.use('document', 'Macros.LivetableExporterMacroLabels'))
+  ## This is important to know exactly how many steps we have
+  $services.progress.pushLevel(100)
+  ## This allows to consider all steps performed by the XWiki core as the first step of the total 100 steps
+  $services.progress.pushLevel(1)
+  #set($discard = $services.localization.use('document', 'Macros.LivetableExporterMacroLabels'))
 {{/velocity}}
   
 {{include reference="XWiki.LiveTableResultsMacros" /}}
@@ -62,28 +62,28 @@
 {{include reference="Macros.LivetableExporterResultsMacros" /}}
 
 {{velocity output="false"}}
-#set ($log = $services.logging.getLogger($doc.fullName))
-#try()
-#set($extension = "xls")
-#if($request.outputSyntaxType=="csv")
- #set($extension = "csv")
-#elseif($request.outputSyntaxType=="json")
- #set($extension = "json")
-#end
-#set ($extra = '')
-#set ($params = [])
-#if ("$!request.space" != '')
-  #set ($extra = "${extra} and doc.space = ?")
-  #set ($discard = $params.add($request.space))
-#end
-#set ($fileName = "${jobId[1]}.${extension}")
-#gridresultwithfilterexport("$!request.classname" $request.collist.split(',') '' "${extra}" $params $request.outputSyntaxType true $fileName)
-#end
-#if ("$!exception" != '')
-$log.error($exception)
-#end
-## End of the 100 steps
-$services.progress.popLevel()
+  #set ($log = $services.logging.getLogger($doc.fullName))
+  #try()
+    #set($extension = "xls")
+    #if($request.outputSyntaxType=="csv")
+      #set($extension = "csv")
+    #elseif($request.outputSyntaxType=="json")
+      #set($extension = "json")
+    #end
+    #set ($extra = '')
+    #set ($params = [])
+    #if ("$!request.space" != '')
+      #set ($extra = "${extra} and doc.space = ?")
+      #set ($discard = $params.add($request.space))
+    #end
+    #set ($fileName = "${jobId[1]}.${extension}")
+    #gridresultwithfilterexport("$!request.classname" $request.collist.split(',') '' "${extra}" $params $request.outputSyntaxType true $fileName)
+  #end
+  #if ("$!exception" != '')
+    $log.error($exception)
+  #end
+  ## End of the 100 steps
+  $services.progress.popLevel()
 {{/velocity}}
 {{/job}}
 
