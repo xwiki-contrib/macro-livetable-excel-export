@@ -40,164 +40,179 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity output="false"}}
-  #set($EXCEL = "excel")
-  #set($CSV = "csv")
-  #set($JSON = "json")
-  
-  #macro(initializeWriter)
+#set($EXCEL = "excel")
+#set($CSV = "csv")
+#set($JSON = "json")
+
+#macro(initializeWriter)
+  #if ($format == $EXCEL)
+    #set ($excelWriter = $xwiki.calc)
+    #set ($workbook = $excelWriter.getWritableWorkbook())
+    #set ($sheet = $workbook.createSheet("XWiki", 0))
+  #elseif ($format == $CSV)
+    #set ($csvWriter = $xwiki.parseGroovyFromPage("Macros.CsvWriter"))
+    #set ($discard = $csvWriter.initialize())
+    #set ($rowValues = [])
+  #end
+#end
+
+#macro(setColumnView $columnCount $val)
+  #if ($format == $EXCEL)
+    #set ($discard = $sheet.setColumnView($columnCount, $val))
+  #end
+#end
+
+#macro(setCell $rowCount $columnCount $text)
+  #if ($format == $EXCEL)
+    #set ($discard = $excelWriter.setLabelCell($sheet, $rowCount, $columnCount, $text))
+  #elseif ($format == $CSV)
+    #set ($discard = $rowValues.add($text))
+  #end
+#end
+
+#macro(writeRow)
+  #if ($format == $CSV)
+    #set ($discard = $csvWriter.writeNext($rowValues))
+  #end
+#end
+
+#**
+ * Set file name from parameters, if any is passed
+ *#
+#macro(setFileName)
+  #if ("$!request.filename" != '')
     #if ($format == $EXCEL)
-      #set ($excelWriter = $xwiki.calc)
-      #set ($workbook = $excelWriter.getWritableWorkbook())
-      #set ($sheet = $workbook.createSheet("XWiki", 0))
+      #set ($filename = "$!{request.filename}.xls")
     #elseif ($format == $CSV)
-      #set ($csvWriter = $xwiki.parseGroovyFromPage("Macros.CsvWriter"))
-      #set ($discard = $csvWriter.initialize())
-      #set ($rowValues = [])
+      #set ($filename = "$!{request.filename}.csv")
     #end
-  #end
-  #macro(setColumnView $columnCount $val)
+  #else
     #if ($format == $EXCEL)
-      #set ($discard = $sheet.setColumnView($columnCount, $val))
-    #end
-  #end
-  #macro(setCell $rowCount $columnCount $text)
-    #if ($format == $EXCEL)
-      #set ($discard = $excelWriter.setLabelCell($sheet, $rowCount, $columnCount, $text))
+      #set ($filename = 'data.xls')
     #elseif ($format == $CSV)
-      #set ($discard = $rowValues.add($text))
+      #set ($filename = 'data.csv')
     #end
   #end
-  #macro(writeRow)
-    #if ($format == $CSV)
-      #set ($discard = $csvWriter.writeNext($rowValues))
-    #end
+#end
+
+#macro(setResponseHeaders)
+  #setFileName()
+  #set ($contentHeader = 'inline; filename="' + $filename + '"')
+  #set ($discard = $response.setHeader('Content-Disposition', $contentHeader))
+  ## Start Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
+  ## For more explanations about this approach : http://stackoverflow.com/questions/3415370/ie-unable-to-download-from-unable-to-open-this-internet-site-the-request
+  #set ($discard = $response.setHeader('Cache-Control', 'private'))
+  #set ($discard = $response.setHeader('Pragma', 'cache'))
+  #set ($expires = $util.getDate().getTime())
+  #set ($expires = $expires + 120000)
+  #set ($expires = $util.getDate($expires))
+  #set ($discard = $response.setDateHeader('Expires', $expires.getTime()))
+  #if ($format == $EXCEL)
+    #set ($discard = $response.setContentType('application/ms-excel'))
+  #elseif ($format == $CSV)
+    #set ($discard = $response.setContentType('text/csv'))
+  #elseif ($format == $JSON)
+    #set ($discard = $response.setContentType('application/json'))
   #end
-  ## Set file name from parameters, if any is passed
-  #macro(setFileName)
-    #if ("$!request.filename" != '')
-      #if ($format == $EXCEL)
-        #set ($filename = "$!{request.filename}.xls")
-      #elseif ($format == $CSV)
-        #set ($filename = "$!{request.filename}.csv")
+#end
+
+#**
+ * Get the columns to export. If the all the class properties are asked for, then force add all the properties of the class in the export
+ *#
+#macro(setColumnList)
+  #if ("$!{request.withAllFields}" == 'true')
+    #set ($allColumns = [])
+    #foreach ($column in $columnList)
+      #set ($discard = $allColumns.add($column))
+    #end
+    ## DEBUG: $allColumns
+    ## get all the properties from the passed class to add them in the list
+    #foreach ($property in $xwiki.getDocument($className).getxWikiClass().properties)
+      #if (!$allColumns.contains($property.name))
+        #set ($discard = $allColumns.add($property.name))
+        ## DEBUG: adding additional column $property.name
       #end
+    #end
+    ## DEBUG: exporting: $allColumns
+    #set ($columnList = $allColumns.toArray())
+  #end
+#end
+
+#**
+ * Prepare the first line of the sheet with column names
+ *#
+#macro(writeFileHeaders)
+  #set ($columnCount = 0)
+  #foreach ($columnName in $columnList)
+    ##DEBUG: generating column $columnName on position $columnCount
+    #setColumnView($velocityCount, 15)
+    #if ($columnName.startsWith('doc.'))
+      #set ($columnPrettyName = $services.localization.render("$!{request.transprefix}${columnName}"))
+      #setCell(0, $columnCount, $columnPrettyName)
+      #setColumnView($columnCount, 20)
+    #elseif ($columnName == '_action')
     #else
-      #if ($format == $EXCEL)
-        #set ($filename = 'data.xls')
-      #elseif ($format == $CSV)
-        #set ($filename = 'data.csv')
+      #set ($columnPrettyName = $services.localization.render("$!{request.transprefix}${columnName}"))
+      #if ($columnPrettyName == "$!{request.transprefix}${columnName}")
+        ## col pretty name was not found from translations, try to use the property's pretty name (important for user directory export, for example)
+        #set ($propNameTranslationKey = "${className}_${columnName}")
+        #set ($columnPrettyName = $services.localization.render($propNameTranslationKey))
       #end
+      #setCell(0, $columnCount, $columnPrettyName)
+      #setColumnView($columnCount, 20)
     #end
+    #set ($columnCount = $columnCount + 1)
   #end
-  #macro(setResponseHeaders)
-    #setFileName()
-    #set ($contentHeader = 'inline; filename="' + $filename + '"')
-    #set ($discard = $response.setHeader('Content-Disposition', $contentHeader))
-    ## Start Internet Explorer file downloads over SSL do not work with the cache control headers : http://support.microsoft.com/kb/323308
-    ## For more explanations about this approach : http://stackoverflow.com/questions/3415370/ie-unable-to-download-from-unable-to-open-this-internet-site-the-request
-    #set ($discard = $response.setHeader('Cache-Control', 'private'))
-    #set ($discard = $response.setHeader('Pragma', 'cache'))
-    #set ($expires = $util.getDate().getTime())
-    #set ($expires = $expires + 120000)
-    #set ($expires = $util.getDate($expires))
-    #set ($discard = $response.setDateHeader('Expires', $expires.getTime()))
-    #if ($format == $EXCEL)
-      #set ($discard = $response.setContentType('application/ms-excel'))
-    #elseif ($format == $CSV)
-      #set ($discard = $response.setContentType('text/csv'))
-    #elseif ($format == $JSON)
-      #set ($discard = $response.setContentType('application/json'))
-    #end
+  #if ("$!{request.withPageName}" == 'true')
+    #setCell(0, $columnCount, "Reference")
+    #setColumnView($columnCount, 20)
+    #set ($columnCount = $columnCount + 1)
   #end
-  ## Get the columns to export. If the all the class properties are asked for, then force add all the properties of the class in the export
-  #macro(setColumnList)
-    #if ("$!{request.withAllFields}" == 'true')
-      #set ($allColumns = [])
-      #foreach ($column in $columnList)
-        #set ($discard = $allColumns.add($column))
-      #end
-      ## DEBUG: $allColumns
-      ## get all the properties from the passed class to add them in the list
-      #foreach ($property in $xwiki.getDocument($className).getxWikiClass().properties)
-        #if (!$allColumns.contains($property.name))
-          #set ($discard = $allColumns.add($property.name))
-          ## DEBUG: adding additional column $property.name
-        #end
-      #end
-      ## DEBUG: exporting: $allColumns
-      #set ($columnList = $allColumns.toArray())
-    #end
+  #if ("$!{request.withPageURL}" == 'true')
+    #setCell(0, $columnCount, "URL")
+    #setColumnView($columnCount, 80)
   #end
-  ## Prepare the first line of the sheet with column names
-  #macro(writeFileHeaders)
+  #writeRow()
+#end
+
+#**
+ * Marshall all data from the $map.rows to the Excel/CSV
+ *#
+#macro(writeRows)
+  #set ($rowCount = 1)
+  #foreach ($row in $map.rows)
+    #set ($rowValues = [])
     #set ($columnCount = 0)
+    ## DEBUG: exporting $row
     #foreach ($columnName in $columnList)
-      ##DEBUG: generating column $columnName on position $columnCount
-      #setColumnView($velocityCount, 15)
+      ## get the value of the column from the current row and put it in the excel
       #if ($columnName.startsWith('doc.'))
-        #set ($columnPrettyName = $services.localization.render("$!{request.transprefix}${columnName}"))
-        #setCell(0, $columnCount, $columnPrettyName)
-        #setColumnView($columnCount, 20)
-      #elseif ($columnName == '_action')
+        #set ($columnValue = "$!row.get($columnName.replace('doc.', 'doc_'))")
       #else
-        #set ($columnPrettyName = $services.localization.render("$!{request.transprefix}${columnName}"))
-        #if ($columnPrettyName == "$!{request.transprefix}${columnName}")
-          ## col pretty name was not found from translations, try to use the property's pretty name (important for user directory export, for example)
-          #set ($propNameTranslationKey = "${className}_${columnName}")
-          #set ($columnPrettyName = $services.localization.render($propNameTranslationKey))
+        #set ($columnValue = "$!row.get($columnName)")
+        ## hack when the cell contains html, to use the cell_value instead
+        #if ($columnValue.indexOf('&lt;') &gt;= 0)
+          #set ($columnValueValue = $row.get("${columnName}_value"))
+          #if ("$!columnValueValue" != '')
+            #set ($columnValue = $columnValueValue)
+          #end
         #end
-        #setCell(0, $columnCount, $columnPrettyName)
-        #setColumnView($columnCount, 20)
       #end
+      #setCell($rowCount, $columnCount, $columnValue)
       #set ($columnCount = $columnCount + 1)
     #end
     #if ("$!{request.withPageName}" == 'true')
-      #setCell(0, $columnCount, "Reference")
-      #setColumnView($columnCount, 20)
+      #setCell($rowCount, $columnCount, "$!row.get('doc_fullName')")
       #set ($columnCount = $columnCount + 1)
     #end
     #if ("$!{request.withPageURL}" == 'true')
-      #setCell(0, $columnCount, "URL")
-      #setColumnView($columnCount, 80)
+      #setCell($rowCount, $columnCount, "$!row.get('doc_url')")
+      #set ($columnCount = $columnCount + 1)
     #end
+    #set ($rowCount = $rowCount + 1)
     #writeRow()
   #end
-  ## Marshall all data from the $map.rows to the Excel/CSV
-  #macro(writeRows)
-    #set ($rowCount = 1)
-    #foreach ($row in $map.rows)
-      #set ($rowValues = [])
-      #set ($columnCount = 0)
-      ## DEBUG: exporting $row
-      #foreach ($columnName in $columnList)
-        ## get the value of the column from the current row and put it in the excel
-        #if ($columnName.startsWith('doc.'))
-          #set ($columnValue = "$!row.get($columnName.replace('doc.', 'doc_'))")
-        #else
-          #set ($columnValue = "$!row.get($columnName)")
-          ## hack when the cell contains html, to use the cell_value instead
-          #if ($columnValue.indexOf('&lt;') &gt;= 0)
-            #set ($columnValueValue = $row.get("${columnName}_value"))
-            #if ("$!columnValueValue" != '')
-              #set ($columnValue = $columnValueValue)
-            #end
-          #end
-        #end
-        #setCell($rowCount, $columnCount, $columnValue)
-        #set ($columnCount = $columnCount + 1)
-      #end
-      #if ("$!{request.withPageName}" == 'true')
-        #setCell($rowCount, $columnCount, "$!row.get('doc_fullName')")
-        #set ($columnCount = $columnCount + 1)
-      #end
-      #if ("$!{request.withPageURL}" == 'true')
-        #setCell($rowCount, $columnCount, "$!row.get('doc_url')")
-        #set ($columnCount = $columnCount + 1)
-      #end
-      #set ($rowCount = $rowCount + 1)
-      #writeRow()
-    #end
-  #end
-
+#end
 
 #**
  * This macro exports the data from a livetable to an Excel or CSV file. It does the same as the livetable Ajax call, but it returns the results in the requested format.
