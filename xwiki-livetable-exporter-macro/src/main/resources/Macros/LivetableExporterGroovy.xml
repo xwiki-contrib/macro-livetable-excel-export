@@ -55,6 +55,7 @@ public class WriteFileGroovy {
   }
 
   public writeFile(bytes, name, services) {
+    // FIXME: should this also be available only to users with programming rights, in order to prevent whoever from writing files in the temp folder?
     def file = getFile(name, services);
     try {
       FileUtils.writeByteArrayToFile(file, bytes)
@@ -66,6 +67,12 @@ public class WriteFileGroovy {
   }
 
   public downloadFile(name, services, fileName, xcontext) {
+    // check rights of the caller script author to execute this operation, if it's not a programming script, don't allow access to files
+    if (!xcontext.hasProgrammingRights()) {
+      services.logging.getLogger(this.getClass().getName()).warn("An attempt to access function downloadFile was done with a user without hasProgrammingRights");
+      return;
+    }
+    // if the right is there, proceed with fetching the file and downloading it
     try {
       def response = xcontext.response
       def file = getFile(name, services);
