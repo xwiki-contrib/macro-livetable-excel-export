@@ -174,8 +174,8 @@ require(['jquery'], function(jQuery) {
     console.log("in export");
     // Get the final part of the data sources URL, after the ?
     var urlParameters = this.getUrl.substr(this.getUrl.indexOf('?'));
-    if ((async=="true") &amp;&amp; (resultsPage=='Macros.LivetableExporterMacroResults'))
-      resultsPage = resultsPage.replace("Results", "Async");
+    if ((async=="true") &amp;&amp; (resultsPage=='Macros.LivetableExporterResults'))
+      resultsPage += "Async";
     var resultsPageReference = XWiki.Model.resolve(resultsPage, XWiki.EntityType.DOCUMENT);
     var macroDataSourcesDocument = new XWiki.Document(resultsPageReference);
     // Compute the URL for the file export action
@@ -1289,7 +1289,7 @@ document.observe("xwiki:dom:loaded", $functionName);
       </name>
     </class>
     <property>
-      <defaultValue>Macros.LivetableExporterMacroResults</defaultValue>
+      <defaultValue>Macros.LivetableExporterResults</defaultValue>
     </property>
     <property>
       <description>Name of a custom page generating the results, if different than the default.</description>
@@ -1685,11 +1685,10 @@ document.observe("xwiki:dom:loaded", $functionName);
       </name>
     </class>
     <property>
-      <defaultValue>Macros.LivetableExporterMacroDownload</defaultValue>
+      <defaultValue>Macros.LivetableExporterResultsAsyncDownload</defaultValue>
     </property>
     <property>
-      <description>
-</description>
+      <description/>
     </property>
     <property>
       <mandatory>0</mandatory>
