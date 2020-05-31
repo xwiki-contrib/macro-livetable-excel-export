@@ -47,7 +47,7 @@
 #prepareGridResultsParamsFromRequest()
 #if ($request.outputSyntaxType == $EXCEL || $request.outputSyntaxType == $CSV)
   #gridresultwithfilterexport("$!request.classname" $request.collist.split(',') '' "${extra}" $params $request.outputSyntaxType false "")
-#elseif ($request.outputSyntaxType == 'json')
+#elseif ($request.outputSyntaxType == 'json' || "$!request.outputSyntaxType" == '')
   #gridresultwithfilter("$!request.classname" $request.collist.split(',') '' "${extra}" $params)
 #else
   ##TODO: translation message
