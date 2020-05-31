@@ -829,10 +829,10 @@ function $functionName(){
   #if ("$!xcontext.macro.params.async" == 'true')
    #set($hasASync = true)
   #end
-  var exportButtonTitle = new Element('span', {'class': 'xwiki-livetable-tools-text'}).update('$btnLabel');
+  var exportButtonTitle = new Element('span', {'class': 'xwiki-livetable-tools-text'}).update("$escapetool.javascript($btnLabel)");
   var exportButton = new Element('button', {'class' : 'button', 'title':"$escapetool.javascript($btnIconTitle)"});
   exportButton.appendChild(exportButtonTitle);
-  #if ($format == 'excel')
+  #if ($format == 'excel' &amp;&amp; "$!xcontext.macro.params.label" == '')
     var excelButtonIcon = new Element('span', {'class': 'xwiki-livetable-tools-exporter-excel'});
     exportButton.appendChild(excelButtonIcon);
   #end
