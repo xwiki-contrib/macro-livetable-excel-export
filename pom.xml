@@ -44,6 +44,12 @@
       <timezone>+1</timezone>
     </developer>
     <developer>
+      <id>ludovic</id>
+      <name>Ludovic Dubost</name>
+      <email>ludovic at xwiki.com</email>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
       <id>aluca</id>
       <name>Anca Luca</name>
       <email>lucaa at xwiki.com</email>
