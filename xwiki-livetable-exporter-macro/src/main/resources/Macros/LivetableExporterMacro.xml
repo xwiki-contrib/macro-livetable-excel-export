@@ -237,7 +237,7 @@ require(['jquery'], function(jQuery) {
           // nothing to do
        }
       }, {
-        confirmationText: confirmationText.replace("{0}", this.totalRows).replace("{1}", formatText[format]),
+        confirmationText: confirmationText.replace("{0}", (limit == 0 || limit &gt; this.totalRows) ? this.totalRows : limit).replace("{1}", formatText[format]),
         yesButtonText: "$services.localization.render('core.widgets.confirmationBox.button.yes')",
         noButtonText: "$services.localization.render('core.widgets.confirmationBox.button.no')"
       });
