@@ -24,11 +24,11 @@
     <parent>
         <groupId>org.xwiki.contrib</groupId>
         <artifactId>xwiki-livetable-export-macros</artifactId>
-        <version>4.0.1</version>
+        <version>4.1-SNAPSHOT</version>
     </parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>xwiki-livetable-excel-export-macro</artifactId>
-    <version>4.0.1</version>
+    <version>4.1-SNAPSHOT</version>
     <properties>
         <xwiki.extension.name>LiveTableExcelExport Macro</xwiki.extension.name>
         <xwiki.extension.category>macro</xwiki.extension.category>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>org.xwiki.contrib</groupId>
             <artifactId>xwiki-livetable-exporter-macro</artifactId>
-            <version>4.0.1</version>
+            <version>4.1-SNAPSHOT</version>
             <type>xar</type>
         </dependency>
     </dependencies>
