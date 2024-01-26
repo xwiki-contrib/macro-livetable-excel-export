@@ -19,5 +19,4 @@
  */
 
 xwikiModule {
-  javaTool = 'java7'
 }
