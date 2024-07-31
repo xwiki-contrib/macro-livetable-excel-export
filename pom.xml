@@ -1,5 +1,4 @@
 <!--
- *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  *
@@ -17,25 +16,27 @@
  * License along with this software; if not, write to the Free
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
- *
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>parent-platform</artifactId>
-    <version>6.2.5</version>
+    <version>8.4-12</version>
     <!-- Don't forget to release with mvn org.apache.maven.plugins:maven-release-plugin:2.5:prepare as long as this inherits from 5.4.x because of the bug with git 1.9+ of previous versions of the release plugin -->
   </parent>
-  <properties>
-    <platform.version>6.0</platform.version>
-  </properties>
   <groupId>org.xwiki.contrib</groupId>
   <artifactId>xwiki-livetable-export-macros</artifactId>
   <version>4.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>XWiki Livetable Export Macros</name>
   <description>Add an export button to a livetable.</description>
+  <properties>
+    <platform.version>6.0</platform.version>
+
+    <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
+    <xwiki.issueManagement.jira.id>XALTXLS</xwiki.issueManagement.jira.id>
+  </properties>
   <developers>
     <developer>
       <id>gdelhumeau</id>
@@ -65,10 +66,6 @@
     <url>https://github.com/xwiki-contrib/macro-livetable-excel-export/tree/master</url>
     <tag>HEAD</tag>
   </scm>
-  <issueManagement>
-    <system>jira</system>
-    <url>https://jira.xwiki.org/browse/XALTXLS</url>
-  </issueManagement>
   <modules>
     <module>xwiki-livetable-excel-export-macro</module>
     <module>xwiki-livetable-exporter-macro</module>
